@@ -1,0 +1,7 @@
+# Ignore other projects in the parent directory
+aem-a2ui-demo/
+aem-content-transformer/
+aem-crystal/
+baml-java-app/
+baml-java-example/
+expense-tracker/

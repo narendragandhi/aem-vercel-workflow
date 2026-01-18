@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workspaceFilter version="1.0">
+    <filter root="/content/aem-vercel-workflow"/>
+    <filter root="/content/dam/aem-vercel-workflow"/>
+    <filter root="/content/experience-fragments/aem-vercel-workflow"/>
+</workspaceFilter>

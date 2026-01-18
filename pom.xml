@@ -209,6 +209,7 @@
                     <artifactId>maven-sling-plugin</artifactId>
                     <version>2.4.2</version>
                     <configuration>
+.
                         <slingUrl>http://${aem.host}:${aem.port}/system/sling/servlet/fileinstall</slingUrl>
                         <usePut>true</usePut>
                     </configuration>

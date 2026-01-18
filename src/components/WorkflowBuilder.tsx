@@ -1,25 +1,20 @@
 import React, { useCallback, useMemo } from 'react';
-import ReactFlow, {
+import {
+  ReactFlow,
   Node,
   Edge,
   addEdge,
   Connection,
   useNodesState,
   useEdgesState,
-  Controls,
-  MiniMap,
-  Background,
-  BackgroundVariant,
   NodeTypes,
   EdgeTypes,
 } from '@reactflow/core';
-import '@reactflow/core/dist/style.css';
-import '@reactflow/background/dist/style.css';
-import '@reactflow/controls/dist/style.css';
-import '@reactflow/minimap/dist/style.css';
-
-import { WorkflowDefinition, WorkflowStep, WorkflowEdge } from '@/types/workflow';
-import { useWorkflowStore } from '@/hooks/useWorkflowStore';
+import { Background, BackgroundVariant } from '@reactflow/background';
+import { Controls } from '@reactflow/controls';
+import { MiniMap } from '@reactflow/minimap';
+import { WorkflowDefinition, WorkflowStep, WorkflowEdge } from '../types/workflow';
+import { useWorkflowStore } from '../hooks/useWorkflowStore';
 import { AEMStepNode } from './nodes/AEMStepNode';
 import { ProcessStepNode } from './nodes/ProcessStepNode';
 import { StartEndNode } from './nodes/StartEndNode';
@@ -122,7 +117,9 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
     [readOnly, onEdgesChange]
   );
 
-  const handleSave = useCallback(() => {
+  const { saveWorkflow } = useWorkflowStore();
+
+  const handleSave = useCallback(async () => {
     const workflowDefinition: WorkflowDefinition = {
       id: workflow?.id || `workflow-${Date.now()}`,
       name: workflow?.name || 'Untitled Workflow',
@@ -130,7 +127,7 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
       steps: nodes.map((node): WorkflowStep => ({
         id: node.id,
         type: node.type as string,
-        position: node.position,
+        position: { x: node.position.x, y: node.position.y },
         data: node.data,
       })),
       edges: edges.map((edge): WorkflowEdge => ({
@@ -142,16 +139,23 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
         type: edge.type,
         data: edge.data,
       })),
-      variables: workflow?.variables,
+      variables: workflow?.variables || {},
       createdAt: workflow?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      createdBy: 'admin', // Should come from user session
+      createdBy: 'demo-user',
     };
 
-    if (onSave) {
-      onSave(workflowDefinition);
+    try {
+      if (onSave) {
+        await onSave(workflowDefinition);
+      } else {
+        await saveWorkflow(workflowDefinition);
+        console.log('Workflow saved successfully!');
+      }
+    } catch (error) {
+      console.error('Error saving workflow:', error);
     }
-  }, [nodes, edges, workflow, onSave]);
+  }, [nodes, edges, workflow, onSave, saveWorkflow]);
 
   return (
     <div className="workflow-builder" style={{ width: '100%', height: '100%' }}>

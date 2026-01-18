@@ -20,19 +20,19 @@ export const StartEndNode: React.FC<NodeProps<StartEndNodeData>> = ({ data, sele
       {isStart && (
         <Handle
           type="source"
-          position={Position.Bottom}
+          position="bottom"
           className="w-3 h-3 bg-green-400"
         />
       )}
       
+      
       {!isStart && (
         <Handle
           type="target"
-          position={Position.Top}
+          position="top"
           className="w-3 h-3 bg-red-400"
         />
       )}
-      
       <div className="flex flex-col items-center">
         {isStart ? (
           <PlayCircle className={`w-6 h-6 mb-2 ${selected ? 'text-green-600' : 'text-green-500'}`} />

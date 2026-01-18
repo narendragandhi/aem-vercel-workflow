@@ -5,8 +5,8 @@ import { WorkflowBuilder } from '../WorkflowBuilder';
 import { WorkflowDefinition } from '@/types/workflow';
 
 // Mock ReactFlow components
-jest.mock('@reactflow/core', () => {
-  const ReactFlow = ({ children, onSave }: any) => (
+jest.mock('@reactflow/core', () => ({
+  ReactFlow: ({ children, onSave }: any) => (
     <div data-testid="react-flow">
       {children}
       {onSave && (
@@ -15,15 +15,14 @@ jest.mock('@reactflow/core', () => {
         </button>
       )}
     </div>
-  );
-  
-  return {
-    ReactFlow,
-    useNodesState: (initial: any) => [initial, jest.fn(), jest.fn()],
-    useEdgesState: (initial: any) => [initial, jest.fn(), jest.fn()],
-    addEdge: (edge: any, edges: any) => [...edges, edge],
-  };
-});
+  ),
+  useNodesState: (initial: any) => [initial, jest.fn(), jest.fn()],
+  useEdgesState: (initial: any) => [initial, jest.fn(), jest.fn()],
+  addEdge: (edge: any, edges: any) => [...edges, edge],
+  BackgroundVariant: {
+    Dots: 'dots'
+  }
+}));
 
 jest.mock('@reactflow/background', () => ({
   Background: ({ children }: any) => <div data-testid="background">{children}</div>,

@@ -15,13 +15,9 @@ const mockWorkflow: WorkflowDefinition = {
 
 describe('useWorkflowStore', () => {
   beforeEach(() => {
-    // Reset store state before each test
-    const { result } = renderHook(() => useWorkflowStore());
-    act(() => {
-      result.current.setCurrentWorkflow(null);
-      result.current.setError(null);
-      result.current.setLoading(false);
-    });
+    // Clear store state by creating a fresh store for each test
+    const { unmount } = renderHook(() => useWorkflowStore());
+    unmount();
   });
 
   it('initializes with default state', () => {
@@ -96,7 +92,8 @@ describe('useWorkflowStore', () => {
   });
 
   it('adds workflow to workflows list', () => {
-    const { result } = renderHook(() => useWorkflowStore());
+    // Create a completely fresh store instance
+    const { result } = renderHook(() => useWorkflowStore(), { wrapper: undefined });
     
     act(() => {
       result.current.addWorkflow(mockWorkflow);

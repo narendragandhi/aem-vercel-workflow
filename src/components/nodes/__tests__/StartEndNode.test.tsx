@@ -13,6 +13,10 @@ jest.mock('@reactflow/core', () => ({
   Handle: ({ type, position }: any) => (
     <div data-testid={`handle-${type}-${position}`} />
   ),
+  Position: {
+    Top: 'top',
+    Bottom: 'bottom'
+  }
 }));
 
 describe('StartEndNode', () => {
@@ -79,12 +83,12 @@ describe('StartEndNode', () => {
 
   it('renders source handle for start node', () => {
     render(<StartEndNode {...defaultStartProps} />);
-    expect(screen.getByTestId('handle-source-Bottom')).toBeInTheDocument();
+    expect(screen.getByTestId('handle-source-bottom')).toBeInTheDocument();
   });
 
   it('renders target handle for end node', () => {
     render(<StartEndNode {...defaultEndProps} />);
-    expect(screen.getByTestId('handle-target-Top')).toBeInTheDocument();
+    expect(screen.getByTestId('handle-target-top')).toBeInTheDocument();
   });
 
   it('defaults to start node when isStart is not specified', () => {
@@ -96,7 +100,7 @@ describe('StartEndNode', () => {
 
     render(<StartEndNode {...propsWithoutStartFlag} />);
     expect(screen.getByTestId('play-circle-icon')).toBeInTheDocument();
-    expect(screen.getByTestId('handle-source-Bottom')).toBeInTheDocument();
+    expect(screen.getByTestId('handle-source-bottom')).toBeInTheDocument();
   });
 
   it('renders without optional props', () => {

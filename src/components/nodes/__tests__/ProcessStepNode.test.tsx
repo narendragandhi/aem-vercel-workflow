@@ -13,6 +13,10 @@ jest.mock('@reactflow/core', () => ({
   Handle: ({ type, position }: any) => (
     <div data-testid={`handle-${type}-${position}`} />
   ),
+  Position: {
+    Top: 'top',
+    Bottom: 'bottom'
+  }
 }));
 
 describe('ProcessStepNode', () => {
@@ -62,8 +66,8 @@ describe('ProcessStepNode', () => {
 
   it('renders handles for connections', () => {
     render(<ProcessStepNode {...defaultProps} />);
-    expect(screen.getByTestId('handle-target-Top')).toBeInTheDocument();
-    expect(screen.getByTestId('handle-source-Bottom')).toBeInTheDocument();
+    expect(screen.getByTestId('handle-target-top')).toBeInTheDocument();
+    expect(screen.getByTestId('handle-source-bottom')).toBeInTheDocument();
   });
 
   it('shows play icon for automated processes', () => {

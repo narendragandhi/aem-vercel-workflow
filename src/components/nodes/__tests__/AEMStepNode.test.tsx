@@ -12,6 +12,10 @@ jest.mock('@reactflow/core', () => ({
   Handle: ({ type, position }: any) => (
     <div data-testid={`handle-${type}-${position}`} />
   ),
+  Position: {
+    Top: 'top',
+    Bottom: 'bottom'
+  }
 }));
 
 describe('AEMStepNode', () => {
@@ -62,8 +66,8 @@ describe('AEMStepNode', () => {
 
   it('renders handles for connections', () => {
     render(<AEMStepNode {...defaultProps} />);
-    expect(screen.getByTestId('handle-target-Top')).toBeInTheDocument();
-    expect(screen.getByTestId('handle-source-Bottom')).toBeInTheDocument();
+    expect(screen.getByTestId('handle-target-top')).toBeInTheDocument();
+    expect(screen.getByTestId('handle-source-bottom')).toBeInTheDocument();
   });
 
   it('applies correct step type color', () => {

@@ -18,7 +18,7 @@ export const ProcessStepNode: React.FC<NodeProps<ProcessStepNodeData>> = ({ data
     >
       <Handle
         type="target"
-        position={Position.Top}
+        position="top"
         className="w-3 h-3 bg-gray-400"
       />
       
@@ -46,7 +46,7 @@ export const ProcessStepNode: React.FC<NodeProps<ProcessStepNodeData>> = ({ data
       
       <Handle
         type="source"
-        position={Position.Bottom}
+        position="bottom"
         className="w-3 h-3 bg-gray-400"
       />
     </div>

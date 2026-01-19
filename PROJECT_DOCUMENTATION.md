@@ -32,6 +32,7 @@ aem-vercel-workflow/
 - OSGi Framework (R7)
 - Apache Sling Models
 - Jackson JSON Processing (2.15.2)
+- Lombok (1.18.30)
 - JUnit 4 + Mockito for testing
 
 **Frontend (React/TypeScript):**
@@ -157,6 +158,30 @@ aem-vercel-workflow/
 <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 <maven.compiler.source>11</maven.compiler.source>
 <maven.compiler.target>11</maven.compiler.target>
+```
+
+### Build Configuration
+
+**Maven Compiler Plugin**
+The project is configured to use `maven-compiler-plugin` version `3.13.0` and `lombok` version `1.18.30` for annotation processing. This is configured in the parent `pom.xml`.
+
+```xml
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <version>3.13.0</version>
+    <configuration>
+        <source>${maven.compiler.source}</source>
+        <target>${maven.compiler.target}</target>
+        <annotationProcessorPaths>
+            <path>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>1.18.30</version>
+            </path>
+        </annotationProcessorPaths>
+    </configuration>
+</plugin>
 ```
 
 ### Frontend Dependencies

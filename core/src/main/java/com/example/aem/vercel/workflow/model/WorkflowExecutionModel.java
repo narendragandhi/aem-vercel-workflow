@@ -2,6 +2,8 @@ package com.example.aem.vercel.workflow.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.models.annotations.DefaultInjectionStrategy;
 import org.apache.sling.models.annotations.Model;
@@ -17,6 +19,8 @@ import java.util.Map;
     adaptables = Resource.class,
     defaultInjectionStrategy = DefaultInjectionStrategy.OPTIONAL
 )
+@Data
+@NoArgsConstructor
 public class WorkflowExecutionModel {
 
     @ValueMapValue
@@ -60,79 +64,6 @@ public class WorkflowExecutionModel {
         this.startTime = System.currentTimeMillis();
         this.logs = new ArrayList<>();
         this.variables = new HashMap<>();
-    }
-
-    // Default constructor for Sling Models
-    public WorkflowExecutionModel() {
-        this.status = "running";
-        this.startTime = System.currentTimeMillis();
-        this.logs = new ArrayList<>();
-        this.variables = new HashMap<>();
-    }
-
-    // Getters and Setters
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getWorkflowId() {
-        return workflowId;
-    }
-
-    public void setWorkflowId(String workflowId) {
-        this.workflowId = workflowId;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public long getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(long startTime) {
-        this.startTime = startTime;
-    }
-
-    public long getEndTime() {
-        return endTime;
-    }
-
-    public void setEndTime(long endTime) {
-        this.endTime = endTime;
-    }
-
-    public String getCurrentStep() {
-        return currentStep;
-    }
-
-    public void setCurrentStep(String currentStep) {
-        this.currentStep = currentStep;
-    }
-
-    public List<WorkflowLogEntryModel> getLogs() {
-        return logs;
-    }
-
-    public void setLogs(List<WorkflowLogEntryModel> logs) {
-        this.logs = logs;
-    }
-
-    public Map<String, Object> getVariables() {
-        return variables;
-    }
-
-    public void setVariables(Map<String, Object> variables) {
-        this.variables = variables;
     }
 
     // Utility methods
@@ -196,6 +127,8 @@ public class WorkflowExecutionModel {
     public void resume() {
         this.status = "running";
     }
+
+
 
     public long getDuration() {
         if (endTime > 0) {

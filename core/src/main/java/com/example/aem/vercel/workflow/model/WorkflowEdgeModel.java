@@ -2,6 +2,8 @@ package com.example.aem.vercel.workflow.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.models.annotations.DefaultInjectionStrategy;
 import org.apache.sling.models.annotations.Model;
@@ -14,6 +16,8 @@ import java.util.Map;
     adaptables = Resource.class,
     defaultInjectionStrategy = DefaultInjectionStrategy.OPTIONAL
 )
+@Data
+@NoArgsConstructor
 public class WorkflowEdgeModel {
 
     @ValueMapValue
@@ -52,68 +56,6 @@ public class WorkflowEdgeModel {
         this.source = source;
         this.target = target;
         this.data = new java.util.HashMap<>();
-    }
-
-    // Default constructor for Sling Models
-    public WorkflowEdgeModel() {
-        this.data = new java.util.HashMap<>();
-    }
-
-    // Getters and Setters
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getSource() {
-        return source;
-    }
-
-    public void setSource(String source) {
-        this.source = source;
-    }
-
-    public String getTarget() {
-        return target;
-    }
-
-    public void setTarget(String target) {
-        this.target = target;
-    }
-
-    public String getSourceHandle() {
-        return sourceHandle;
-    }
-
-    public void setSourceHandle(String sourceHandle) {
-        this.sourceHandle = sourceHandle;
-    }
-
-    public String getTargetHandle() {
-        return targetHandle;
-    }
-
-    public void setTargetHandle(String targetHandle) {
-        this.targetHandle = targetHandle;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public Map<String, Object> getData() {
-        return data;
-    }
-
-    public void setData(Map<String, Object> data) {
-        this.data = data;
     }
 
     public void addData(String key, Object value) {

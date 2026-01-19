@@ -2,6 +2,9 @@ package com.example.aem.vercel.workflow.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.models.annotations.DefaultInjectionStrategy;
 import org.apache.sling.models.annotations.Model;
@@ -15,6 +18,9 @@ import java.util.Map;
     adaptables = Resource.class,
     defaultInjectionStrategy = DefaultInjectionStrategy.OPTIONAL
 )
+@Getter
+@Setter
+@NoArgsConstructor
 public class WorkflowDefinitionModel {
 
     @ValueMapValue
@@ -53,88 +59,6 @@ public class WorkflowDefinitionModel {
         this.updatedAt = System.currentTimeMillis();
     }
 
-    // Default constructor for Sling Models
-    public WorkflowDefinitionModel() {
-        this.steps = new java.util.ArrayList<>();
-        this.edges = new java.util.ArrayList<>();
-        this.variables = new java.util.HashMap<>();
-        this.createdAt = System.currentTimeMillis();
-        this.updatedAt = System.currentTimeMillis();
-    }
-
-    // Getters and Setters
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public List<WorkflowStepModel> getSteps() {
-        return steps;
-    }
-
-    public void setSteps(List<WorkflowStepModel> steps) {
-        this.steps = steps;
-    }
-
-    public List<WorkflowEdgeModel> getEdges() {
-        return edges;
-    }
-
-    public void setEdges(List<WorkflowEdgeModel> edges) {
-        this.edges = edges;
-    }
-
-    public Map<String, Object> getVariables() {
-        return variables;
-    }
-
-    public void setVariables(Map<String, Object> variables) {
-        this.variables = variables;
-    }
-
-    public String getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(String createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    public long getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(long createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public long getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(long updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
     // Utility methods
     public void addStep(WorkflowStepModel step) {
         this.steps.add(step);
@@ -143,7 +67,7 @@ public class WorkflowDefinitionModel {
 
     public void removeStep(String stepId) {
         this.steps.removeIf(step -> step.getId().equals(stepId));
-        this.edges.removeIf(edge -> 
+        this.edges.removeIf(edge ->
             edge.getSource().equals(stepId) || edge.getTarget().equals(stepId));
         this.updatedAt = System.currentTimeMillis();
     }

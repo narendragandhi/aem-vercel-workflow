@@ -2,6 +2,8 @@ package com.example.aem.vercel.workflow.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.models.annotations.Default;
 import org.apache.sling.models.annotations.DefaultInjectionStrategy;
@@ -21,6 +23,8 @@ import java.util.Map;
 )
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Data
+@NoArgsConstructor
 public class AIActionModel {
 
     @ValueMapValue
@@ -164,58 +168,6 @@ public class AIActionModel {
             this.lastError = "Prompt template is required for content actions";
         }
     }
-
-    // Getters and setters
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
-
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-
-    public String getActionType() { return actionType; }
-    public void setActionType(String actionType) { this.actionType = actionType; }
-
-    public String getCategory() { return category; }
-    public void setCategory(String category) { this.category = category; }
-
-    public String getTargetType() { return targetType; }
-    public void setTargetType(String targetType) { this.targetType = targetType; }
-
-    public String getAiProvider() { return aiProvider; }
-    public void setAiProvider(String aiProvider) { this.aiProvider = aiProvider; }
-
-    public String getModel() { return model; }
-    public void setModel(String model) { this.model = model; }
-
-    public Map<String, Object> getConfiguration() { return configuration; }
-    public void setConfiguration(Map<String, Object> configuration) { this.configuration = configuration; }
-
-    public Map<String, Object> getPromptTemplate() { return promptTemplate; }
-    public void setPromptTemplate(Map<String, Object> promptTemplate) { this.promptTemplate = promptTemplate; }
-
-    public Map<String, Object> getOutputSchema() { return outputSchema; }
-    public void setOutputSchema(Map<String, Object> outputSchema) { this.outputSchema = outputSchema; }
-
-    public String getVersion() { return version; }
-    public void setVersion(String version) { this.version = version; }
-
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
-
-    public String getEnabled() { return enabled; }
-    public void setEnabled(String enabled) { this.enabled = enabled; }
-
-    public String[] getTags() { return tags; }
-    public void setTags(String[] tags) { this.tags = tags; }
-
-    public String[] getContentTypes() { return contentTypes; }
-    public void setContentTypes(String[] contentTypes) { this.contentTypes = contentTypes; }
-
-    public boolean isValid() { return isValid; }
-    public String getLastError() { return lastError; }
 
     public boolean isEnabled() {
         return "true".equalsIgnoreCase(enabled);

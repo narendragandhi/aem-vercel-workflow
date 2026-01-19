@@ -2,6 +2,8 @@ package com.example.aem.vercel.workflow.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.models.annotations.DefaultInjectionStrategy;
 import org.apache.sling.models.annotations.Model;
@@ -11,6 +13,8 @@ import org.apache.sling.models.annotations.injectorspecific.ValueMapValue;
     adaptables = Resource.class,
     defaultInjectionStrategy = DefaultInjectionStrategy.OPTIONAL
 )
+@Data
+@NoArgsConstructor
 public class WorkflowLogEntryModel {
 
     @ValueMapValue
@@ -36,52 +40,6 @@ public class WorkflowLogEntryModel {
         this.timestamp = timestamp;
         this.level = level;
         this.message = message;
-    }
-
-    // Default constructor for Sling Models
-    public WorkflowLogEntryModel() {
-        this.timestamp = System.currentTimeMillis();
-    }
-
-    // Getters and Setters
-    public long getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(long timestamp) {
-        this.timestamp = timestamp;
-    }
-
-    public String getLevel() {
-        return level;
-    }
-
-    public void setLevel(String level) {
-        this.level = level;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public String getStepId() {
-        return stepId;
-    }
-
-    public void setStepId(String stepId) {
-        this.stepId = stepId;
-    }
-
-    public String getData() {
-        return data;
-    }
-
-    public void setData(String data) {
-        this.data = data;
     }
 
     // Utility methods

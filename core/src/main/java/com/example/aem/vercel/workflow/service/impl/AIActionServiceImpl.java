@@ -375,7 +375,7 @@ public class AIActionServiceImpl implements AIActionService {
         Map<String, Object> stats = new HashMap<>();
         stats.put("totalExecutions", executions.size());
         stats.put("successfulExecutions", executions.stream().mapToInt(e -> e.isSuccessful() ? 1 : 0).sum());
-        stats.put("failedExecutions", executions.stream().mapToInt(e -> e.hasError() ? 1 : 0).sum());
+        stats.put("failedExecutions", executions.stream().mapToInt(e -> e.isHasError() ? 1 : 0).sum());
         stats.put("averageDuration", executions.stream().mapToLong(AIActionExecutionModel::getActualDuration).average().orElse(0));
         
         return stats;

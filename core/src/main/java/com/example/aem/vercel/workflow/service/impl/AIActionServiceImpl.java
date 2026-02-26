@@ -12,6 +12,9 @@ import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.api.resource.ResourceResolver;
+
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
@@ -38,58 +41,68 @@ import java.util.concurrent.Executors;
 public class AIActionServiceImpl implements AIActionService {
 
     private static final Logger LOG = LoggerFactory.getLogger(AIActionServiceImpl.class);
-    
+
     private static final String ACTIONS_BASE_PATH = "/var/ai-actions";
     private static final String EXECUTIONS_BASE_PATH = "/var/ai-executions";
-    
+
     private final ExecutorService executorService = Executors.newFixedThreadPool(10);
     private final Map<String, CompletableFuture<AIActionExecutionModel>> runningExecutions = new ConcurrentHashMap<>();
 
     @Reference
     private AIService aiService;
 
+    @Reference
+    private ResourceResolverFactory resourceResolverFactory;
+
     private Session session;
+    private ResourceResolver resourceResolver;
 
     @Activate
     protected void activate(Map<String, Object> properties) {
         LOG.info("AI Action Service activated");
-        initializeStorage();
+        try {
+            Map<String, Object> param = new HashMap<>();
+            param.put(ResourceResolverFactory.SUBSERVICE, "ai-actions-service");
+            resourceResolver = resourceResolverFactory.getServiceResourceResolver(param);
+            session = resourceResolver.adaptTo(Session.class);
+            initializeStorage();
+        } catch (org.apache.sling.api.resource.LoginException e) {
+            LOG.error("Failed to get service resource resolver", e);
+        }
     }
-
     private void initializeStorage() {
-        // try {
-        //     // Ensure base paths exist
-        //     ensureNodeExists(ACTIONS_BASE_PATH);
-        //     ensureNodeExists(EXECUTIONS_BASE_PATH);
-        //     LOG.info("AI Action storage initialized");
-        // } catch (RepositoryException e) {
-        //     LOG.error("Failed to initialize AI Action storage", e);
-        // }
+        try {
+            // Ensure base paths exist
+            ensureNodeExists(ACTIONS_BASE_PATH, "sling:Folder");
+            ensureNodeExists(EXECUTIONS_BASE_PATH, "sling:Folder");
+            LOG.info("AI Action storage initialized");
+        } catch (RepositoryException e) {
+            LOG.error("Failed to initialize AI Action storage", e);
+        }
     }
 
     @Override
     public AIActionModel createAction(AIActionModel action) throws Exception {
-        // LOG.info("Creating AI action: {}", action.getName());
+        LOG.info("Creating AI action: {}", action.getName());
         
-        // if (!validateAction(action)) {
-        //     throw new IllegalArgumentException("Invalid action configuration");
-        // }
+        if (!validateAction(action)) {
+            throw new IllegalArgumentException("Invalid action configuration");
+        }
 
-        // try {
-        //     String actionPath = ACTIONS_BASE_PATH + "/" + action.getId();
-        //     Node actionNode = ensureNodeExists(actionPath);
+        try {
+            String actionPath = ACTIONS_BASE_PATH + "/" + action.getId();
+            Node actionNode = ensureNodeExists(actionPath, "nt:unstructured");
             
-        //     // Set action properties
-        //     setActionProperties(actionNode, action);
-        //     session.save();
-        //     // LOG.info("AI action created: {}", action.getId());
-        //     return getAction(action.getId());
+            // Set action properties
+            setActionProperties(actionNode, action);
+            session.save();
+            LOG.info("AI action created: {}", action.getId());
+            return getAction(action.getId());
             
-        // } catch (RepositoryException e) {
-        //     LOG.error("Failed to create AI action: {}", action.getId(), e);
-        //     throw new Exception("Failed to create AI action", e);
-        // }
-        return null;
+        } catch (RepositoryException e) {
+            LOG.error("Failed to create AI action: {}", action.getId(), e);
+            throw new Exception("Failed to create AI action", e);
+        }
     }
 
     @Override
@@ -107,42 +120,41 @@ public class AIActionServiceImpl implements AIActionService {
 
     @Override
     public AIActionModel updateAction(String actionId, AIActionModel action) throws Exception {
-        // LOG.info("Updating AI action: {}", actionId);
+        LOG.info("Updating AI action: {}", actionId);
         
-        // try {
-        //     String actionPath = ACTIONS_BASE_PATH + "/" + actionId;
-        //     Node actionNode = session.getNode(actionPath);
+        try {
+            String actionPath = ACTIONS_BASE_PATH + "/" + actionId;
+            Node actionNode = session.getNode(actionPath);
             
-        //     // Update properties
-        //     setActionProperties(actionNode, action);
-        //     session.save();
+            // Update properties
+            setActionProperties(actionNode, action);
+            session.save();
             
-        //     LOG.info("AI action updated: {}", actionId);
-        //     return getAction(actionId);
+            LOG.info("AI action updated: {}", actionId);
+            return getAction(actionId);
             
-        // } catch (RepositoryException e) {
-        //     LOG.error("Failed to update AI action: {}", actionId, e);
-        //     throw new Exception("Failed to update AI action", e);
-        // }
-        return null;
+        } catch (RepositoryException e) {
+            LOG.error("Failed to update AI action: {}", actionId, e);
+            throw new Exception("Failed to update AI action", e);
+        }
     }
 
     @Override
     public void deleteAction(String actionId) throws Exception {
-        // LOG.info("Deleting AI action: {}", actionId);
+        LOG.info("Deleting AI action: {}", actionId);
         
-        // try {
-        //     String actionPath = ACTIONS_BASE_PATH + "/" + actionId;
-        //     Node actionNode = session.getNode(actionPath);
-        //     actionNode.remove();
-        //     // session.save();
-        //     
-        //     LOG.info("AI action deleted: {}", actionId);
-        //     
-        // } catch (RepositoryException e) {
-        //     LOG.error("Failed to delete AI action: {}", actionId, e);
-        //     throw new Exception("Failed to delete AI action", e);
-        // }
+        try {
+            String actionPath = ACTIONS_BASE_PATH + "/" + actionId;
+            Node actionNode = session.getNode(actionPath);
+            actionNode.remove();
+            session.save();
+            
+            LOG.info("AI action deleted: {}", actionId);
+            
+        } catch (RepositoryException e) {
+            LOG.error("Failed to delete AI action: {}", actionId, e);
+            throw new Exception("Failed to delete AI action", e);
+        }
     }
 
     @Override
@@ -206,61 +218,62 @@ public class AIActionServiceImpl implements AIActionService {
 
     @Override
     public AIActionExecutionModel executeAction(String actionId, Map<String, Object> input, String initiatedBy) throws Exception {
-        // AIActionModel action = getAction(actionId);
-        // if (!action.isEnabled()) {
-        //     throw new Exception("AI action is disabled: " + actionId);
-        // }
+        AIActionModel action = getAction(actionId);
+        if (!action.isEnabled()) {
+            throw new Exception("AI action is disabled: " + actionId);
+        }
 
-        // String executionId = UUID.randomUUID().toString();
-        // AIActionExecutionModel execution = createExecution(executionId, action, input, initiatedBy);
+        String executionId = UUID.randomUUID().toString();
+        AIActionExecutionModel execution = createExecution(executionId, action, input, initiatedBy);
         
-        // // Start async execution
-        // CompletableFuture<AIActionExecutionModel> future = CompletableFuture.supplyAsync(() -> {
-        //     try {
-        //         return executeAsync(execution, action, input);
-        //     } catch (Exception e) {
-        //         LOG.error("AI action execution failed: {}", executionId, e);
-        //         execution.setErrorMessage(e.getMessage());
-        //         execution.setStatus(AIActionExecutionModel.Status.FAILED);
-        //         saveExecution(execution);
-        //         return execution;
-        //     }
-        // }, executorService);
+        // Start async execution
+        CompletableFuture<AIActionExecutionModel> future = CompletableFuture.supplyAsync(() -> {
+            try {
+                return executeAsync(execution, action, input);
+            } catch (Exception e) {
+                LOG.error("AI action execution failed: {}", executionId, e);
+                execution.setErrorMessage(e.getMessage());
+                execution.setStatus(AIActionExecutionModel.Status.FAILED);
+                try {
+                    saveExecution(execution);
+                } catch (Exception ex) {
+                    LOG.error("Failed to save execution after error", ex);
+                }
+                return execution;
+            }
+        }, executorService);
 
-        // runningExecutions.put(executionId, future);
+        runningExecutions.put(executionId, future);
         
-        // return execution;
-        return null;
+        return execution;
     }
 
     @Override
     public AIActionExecutionModel executeActionOnResource(String actionId, String resourcePath, 
                                                           Map<String, Object> input, String initiatedBy) throws Exception {
-        // // Add resource context to input
-        // Map<String, Object> enhancedInput = new HashMap<>(input);
-        // enhancedInput.put("resourcePath", resourcePath);
-        // enhancedInput.put("resourceType", getResourceType(resourcePath));
+        // Add resource context to input
+        Map<String, Object> enhancedInput = new HashMap<>(input);
+        enhancedInput.put("resourcePath", resourcePath);
+        enhancedInput.put("resourceType", getResourceType(resourcePath));
         
-        // AIActionExecutionModel execution = executeAction(actionId, enhancedInput, initiatedBy);
-        // execution.setResourcePath(resourcePath);
-        // saveExecution(execution);
+        AIActionExecutionModel execution = executeAction(actionId, enhancedInput, initiatedBy);
+        execution.setResourcePath(resourcePath);
+        saveExecution(execution);
         
-        // return execution;
-        return null;
+        return execution;
     }
 
     @Override
     public AIActionExecutionModel getExecution(String executionId) throws Exception {
-        // try {
-        //     String executionPath = EXECUTIONS_BASE_PATH + "/" + executionId;
-        //     Node executionNode = session.getNode(executionPath);
-        //     return createExecutionFromNode(executionNode);
+        try {
+            String executionPath = EXECUTIONS_BASE_PATH + "/" + executionId;
+            Node executionNode = session.getNode(executionPath);
+            return createExecutionFromNode(executionNode);
             
-        // } catch (RepositoryException e) {
-        //     LOG.error("Failed to get AI execution: {}", executionId, e);
-        //     throw new Exception("AI execution not found: " + executionId, e);
-        // }
-        return null;
+        } catch (RepositoryException e) {
+            LOG.error("Failed to get AI execution: {}", executionId, e);
+            throw new Exception("AI execution not found: " + executionId, e);
+        }
     }
 
     @Override
@@ -280,36 +293,36 @@ public class AIActionServiceImpl implements AIActionService {
 
     @Override
     public boolean cancelExecution(String executionId) throws Exception {
-        // CompletableFuture<AIActionExecutionModel> future = runningExecutions.get(executionId);
-        // if (future != null && !future.isDone()) {
-        //     future.cancel(true);
-        //     runningExecutions.remove(executionId);
+        CompletableFuture<AIActionExecutionModel> future = runningExecutions.get(executionId);
+        if (future != null && !future.isDone()) {
+            future.cancel(true);
+            runningExecutions.remove(executionId);
             
-        //     AIActionExecutionModel execution = getExecution(executionId);
-        //     execution.setStatus(AIActionExecutionModel.Status.CANCELLED);
-        //     saveExecution(execution);
+            AIActionExecutionModel execution = getExecution(executionId);
+            execution.setStatus(AIActionExecutionModel.Status.CANCELLED);
+            saveExecution(execution);
             
-        //     LOG.info("AI execution cancelled: {}", executionId);
-        //     return true;
-        // }
+            LOG.info("AI execution cancelled: {}", executionId);
+            return true;
+        }
         return false;
     }
 
     @Override
     public void deleteExecution(String executionId) throws Exception {
-        // try {
-        //     String executionPath = EXECUTIONS_BASE_PATH + "/" + executionId;
-        //     Node executionNode = session.getNode(executionPath);
-        //     executionNode.remove();
-        //     session.save();
+        try {
+            String executionPath = EXECUTIONS_BASE_PATH + "/" + executionId;
+            Node executionNode = session.getNode(executionPath);
+            executionNode.remove();
+            session.save();
             
-        //     runningExecutions.remove(executionId);
-        //     LOG.info("AI execution deleted: {}", executionId);
+            runningExecutions.remove(executionId);
+            LOG.info("AI execution deleted: {}", executionId);
             
-        // } catch (RepositoryException e) {
-        //     LOG.error("Failed to delete AI execution: {}", executionId, e);
-        //     throw new Exception("Failed to delete execution", e);
-        // }
+        } catch (RepositoryException e) {
+            LOG.error("Failed to delete AI execution: {}", executionId, e);
+            throw new Exception("Failed to delete execution", e);
+        }
     }
 
     @Override
@@ -319,52 +332,50 @@ public class AIActionServiceImpl implements AIActionService {
 
     @Override
     public AIActionExecutionModel testAction(String actionId, Map<String, Object> input) throws Exception {
-        // AIActionModel action = getAction(actionId);
-        // AIActionExecutionModel testExecution = createExecution("test-" + UUID.randomUUID(), action, input, "test");
+        AIActionModel action = getAction(actionId);
+        AIActionExecutionModel testExecution = createExecution("test-" + UUID.randomUUID(), action, input, "test");
         
-        // // Run test execution synchronously
-        // return executeAsync(testExecution, action, input);
-        return null;
+        // Run test execution synchronously
+        return executeAsync(testExecution, action, input);
     }
 
     @Override
     public AIActionModel cloneAction(String actionId, String newName) throws Exception {
-        // AIActionModel original = getAction(actionId);
-        // AIActionModel clone = new AIActionModel();
+        AIActionModel original = getAction(actionId);
+        AIActionModel clone = new AIActionModel();
         
-        // // Copy all properties except ID
-        // clone.setId(UUID.randomUUID().toString());
-        // clone.setName(newName);
-        // clone.setDescription(original.getDescription() + " (Cloned)");
-        // clone.setActionType(original.getActionType());
-        // clone.setCategory(original.getCategory());
-        // clone.setTargetType(original.getTargetType());
-        // clone.setAiProvider(original.getAiProvider());
-        // clone.setModel(original.getModel());
-        // clone.setConfiguration(original.getConfiguration());
-        // clone.setPromptTemplate(original.getPromptTemplate());
-        // clone.setOutputSchema(original.getOutputSchema());
-        // clone.setVersion("1");
-        // clone.setStatus("draft");
-        // clone.setEnabled("false");
-        // clone.setTags(original.getTags());
-        // clone.setContentTypes(original.getContentTypes());
+        // Copy all properties except ID
+        clone.setId(UUID.randomUUID().toString());
+        clone.setName(newName);
+        clone.setDescription(original.getDescription() + " (Cloned)");
+        clone.setActionType(original.getActionType());
+        clone.setCategory(original.getCategory());
+        clone.setTargetType(original.getTargetType());
+        clone.setAiProvider(original.getAiProvider());
+        clone.setModel(original.getModel());
+        clone.setConfiguration(original.getConfiguration());
+        clone.setPromptTemplate(original.getPromptTemplate());
+        clone.setOutputSchema(original.getOutputSchema());
+        clone.setVersion("1");
+        clone.setStatus("draft");
+        clone.setEnabled(original.getEnabled());
+        clone.setTags(original.getTags());
+        clone.setContentTypes(original.getContentTypes());
         
-        // return createAction(clone);
-        return null;
+        return createAction(clone);
     }
 
     @Override
     public List<AIActionModel> importActions(Map<String, Object> configuration) throws Exception {
+        // TODO: Implementation for bulk import
         List<AIActionModel> importedActions = new ArrayList<>();
-        // Implementation for bulk import
         return importedActions;
     }
 
     @Override
     public Map<String, Object> exportActions(String[] actionIds) throws Exception {
+        // TODO: Implementation for bulk export
         Map<String, Object> exportData = new HashMap<>();
-        // Implementation for bulk export
         return exportData;
     }
 
@@ -396,25 +407,35 @@ public class AIActionServiceImpl implements AIActionService {
     }
 
     // Private helper methods
-    private Node ensureNodeExists(String path) throws RepositoryException {
-        // This method needs a valid JCR session to work.
-        // For now, it's a placeholder.
-        LOG.warn("ensureNodeExists is a placeholder and requires a valid JCR Session.");
-        return null; 
+    private Node ensureNodeExists(String path, String nodeType) throws RepositoryException {
+        if (session.nodeExists(path)) {
+            return session.getNode(path);
+        }
+        String[] parts = path.substring(1).split("/");
+        Node currentNode = session.getRootNode();
+        for (String part : parts) {
+            if (!currentNode.hasNode(part)) {
+                currentNode = currentNode.addNode(part, nodeType);
+            } else {
+                currentNode = currentNode.getNode(part);
+            }
+        }
+        session.save();
+        return currentNode;
     }
 
     private void setActionProperties(Node node, AIActionModel action) throws RepositoryException {
-        // node.setProperty("id", action.getId());
-        // node.setProperty("name", action.getName());
-        // node.setProperty("description", action.getDescription());
-        // node.setProperty("actionType", action.getActionType());
-        // node.setProperty("category", action.getCategory());
-        // node.setProperty("targetType", action.getTargetType());
-        // node.setProperty("aiProvider", action.getAiProvider());
-        // node.setProperty("model", action.getModel());
-        // node.setProperty("version", action.getVersion());
-        // node.setProperty("status", action.getStatus());
-        // node.setProperty("enabled", action.getEnabled());
+        node.setProperty("id", action.getId());
+        node.setProperty("name", action.getName());
+        node.setProperty("description", action.getDescription());
+        node.setProperty("actionType", action.getActionType());
+        node.setProperty("category", action.getCategory());
+        node.setProperty("targetType", action.getTargetType());
+        node.setProperty("aiProvider", action.getAiProvider());
+        node.setProperty("model", action.getModel());
+        node.setProperty("version", action.getVersion());
+        node.setProperty("status", action.getStatus());
+        node.setProperty("enabled", action.getEnabled());
         // Handle String[] properties
         if (action.getTags() != null && action.getTags().length > 0) {
             node.setProperty("tags", action.getTags());
@@ -481,14 +502,14 @@ public class AIActionServiceImpl implements AIActionService {
         execution.setAiProvider(action.getAiProvider());
         execution.setModel(action.getModel());
         
-        // saveExecution(execution); // Session save needs proper context, temporarily commented
+        saveExecution(execution);
         return execution;
     }
 
     private AIActionExecutionModel executeAsync(AIActionExecutionModel execution, AIActionModel action, 
                                                Map<String, Object> input) throws Exception {
         execution.setStatus(AIActionExecutionModel.Status.RUNNING);
-        // saveExecution(execution); // Session save needs proper context, temporarily commented
+        saveExecution(execution);
         
         try {
             // Generate prompt
@@ -511,7 +532,7 @@ public class AIActionServiceImpl implements AIActionService {
             throw e;
         } finally {
             execution.setCompletedAt(new Date());
-            // saveExecution(execution); // Session save needs proper context, temporarily commented
+            saveExecution(execution);
             runningExecutions.remove(execution.getId());
         }
         
@@ -519,57 +540,54 @@ public class AIActionServiceImpl implements AIActionService {
     }
 
     private void saveExecution(AIActionExecutionModel execution) throws Exception {
-        // try {
-        //     // Assuming session is available for JCR operations
-        //     // This method needs a valid JCR session to work.
-        //     LOG.warn("saveExecution is a placeholder and requires a valid JCR Session.");
-        //     // Node executionNode = ensureNodeExists(EXECUTIONS_BASE_PATH + "/" + execution.getId());
+        try {
+            Node executionNode = ensureNodeExists(EXECUTIONS_BASE_PATH + "/" + execution.getId(), "nt:unstructured");
             
-        //     // executionNode.setProperty("id", execution.getId());
-        //     // executionNode.setProperty("actionId", execution.getActionId());
-        //     // executionNode.setProperty("actionName", execution.getActionName());
-        //     // executionNode.setProperty("actionType", execution.getActionType());
-        //     // executionNode.setProperty("status", execution.getStatus().toString()); // Convert Enum to String
+            executionNode.setProperty("id", execution.getId());
+            executionNode.setProperty("actionId", execution.getActionId());
+            executionNode.setProperty("actionName", execution.getActionName());
+            executionNode.setProperty("actionType", execution.getActionType());
+            executionNode.setProperty("status", execution.getStatus().toString()); // Convert Enum to String
             
-        //     // Convert Date to Calendar for JCR property
-        //     Calendar startedAtCalendar = Calendar.getInstance();
-        //     if (execution.getStartedAt() != null) {
-        //         startedAtCalendar.setTime(execution.getStartedAt());
-        //         // executionNode.setProperty("startedAt", startedAtCalendar);
-        //     }
+            // Convert Date to Calendar for JCR property
+            Calendar startedAtCalendar = Calendar.getInstance();
+            if (execution.getStartedAt() != null) {
+                startedAtCalendar.setTime(execution.getStartedAt());
+                executionNode.setProperty("startedAt", startedAtCalendar);
+            }
 
-        //     Calendar completedAtCalendar = Calendar.getInstance();
-        //     if (execution.getCompletedAt() != null) {
-        //         completedAtCalendar.setTime(execution.getCompletedAt());
-        //         // executionNode.setProperty("completedAt", completedAtCalendar);
-        //     }
+            Calendar completedAtCalendar = Calendar.getInstance();
+            if (execution.getCompletedAt() != null) {
+                completedAtCalendar.setTime(execution.getCompletedAt());
+                executionNode.setProperty("completedAt", completedAtCalendar);
+            }
             
-        //     // Handle duration
-        //     // executionNode.setProperty("duration", String.valueOf(execution.getDuration())); // Store as String
+            // Handle duration
+            executionNode.setProperty("duration", execution.getDuration());
 
-        //     // executionNode.setProperty("initiatedBy", execution.getInitiatedBy());
-        //     // if (execution.getResourcePath() != null) {
-        //     //     executionNode.setProperty("resourcePath", execution.getResourcePath());
-        //     // }
-        //     // executionNode.setProperty("aiProvider", execution.getAiProvider());
-        //     // executionNode.setProperty("model", execution.getModel());
-        //     // if (execution.getErrorMessage() != null) {
-        //     //     executionNode.setProperty("errorMessage", execution.getErrorMessage());
-        //     // }
+            executionNode.setProperty("initiatedBy", execution.getInitiatedBy());
+            if (execution.getResourcePath() != null) {
+                executionNode.setProperty("resourcePath", execution.getResourcePath());
+            }
+            executionNode.setProperty("aiProvider", execution.getAiProvider());
+            executionNode.setProperty("model", execution.getModel());
+            if (execution.getErrorMessage() != null) {
+                executionNode.setProperty("errorMessage", execution.getErrorMessage());
+            }
             
-        //     // // Handle String[] for tags
-        //     // if (execution.getTags() != null && execution.getTags().length > 0) {
-        //     //     executionNode.setProperty("tags", execution.getTags());
-        //     // } else {
-        //     //     executionNode.setProperty("tags", new String[0]);
-        //     // }
+            // Handle String[] for tags
+            if (execution.getTags() != null && execution.getTags().length > 0) {
+                executionNode.setProperty("tags", execution.getTags());
+            } else {
+                executionNode.setProperty("tags", new String[0]);
+            }
             
-        //     // session.save(); // Session save needs proper context, temporarily commented
+            session.save();
             
-        // } catch (Exception e) { // Changed to generic Exception for now
-        //     LOG.error("Failed to save execution: {}", execution.getId(), e);
-        //     throw new Exception("Failed to save execution", e);
-        // }
+        } catch (Exception e) { // Changed to generic Exception for now
+            LOG.error("Failed to save execution: {}", execution.getId(), e);
+            throw new Exception("Failed to save execution", e);
+        }
     }
 
     private AIActionExecutionModel createExecutionFromNode(Node node) throws RepositoryException {

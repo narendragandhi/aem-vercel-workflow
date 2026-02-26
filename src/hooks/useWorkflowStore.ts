@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { WorkflowDefinition } from '@/types/workflow';
-import { WorkflowApiService } from '@/services/workflowApi';
+import { DEMO_WORKFLOWS } from '@/data/demoWorkflows';
 
 interface WorkflowState {
   currentWorkflow: WorkflowDefinition | null;
@@ -76,12 +76,12 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     set({ error: null });
   },
 
-  // API Actions
+  // Use demo data directly since we don't have a real API
   loadWorkflows: async () => {
     set({ isLoading: true, error: null });
     try {
-      const workflows = await WorkflowApiService.getWorkflows();
-      set({ workflows, isLoading: false });
+      // Use demo workflows for demo mode
+      set({ workflows: DEMO_WORKFLOWS, isLoading: false });
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to load workflows', isLoading: false });
     }
@@ -90,8 +90,12 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   loadWorkflow: async (id: string) => {
     set({ isLoading: true, error: null });
     try {
-      const workflow = await WorkflowApiService.getWorkflow(id);
-      set({ currentWorkflow: workflow, isLoading: false });
+      const workflow = DEMO_WORKFLOWS.find(w => w.id === id);
+      if (workflow) {
+        set({ currentWorkflow: workflow, isLoading: false });
+      } else {
+        set({ error: 'Workflow not found', isLoading: false });
+      }
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to load workflow', isLoading: false });
     }
@@ -100,21 +104,16 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   saveWorkflow: async (workflow) => {
     set({ isLoading: true, error: null });
     try {
-      let savedWorkflow: WorkflowDefinition;
-      
-      // Check if it's a new workflow
+      // In demo mode, just save to local state
       const existingWorkflow = get().workflows.find(w => w.id === workflow.id);
       
       if (existingWorkflow) {
-        savedWorkflow = await WorkflowApiService.updateWorkflow(workflow.id, workflow);
-        get().updateWorkflow(savedWorkflow);
+        get().updateWorkflow(workflow);
       } else {
-        savedWorkflow = await WorkflowApiService.createWorkflow(workflow);
-        get().addWorkflow(savedWorkflow);
+        get().addWorkflow(workflow);
       }
       
-      set({ currentWorkflow: savedWorkflow, isLoading: false });
-      return savedWorkflow;
+      set({ currentWorkflow: workflow, isLoading: false });
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to save workflow', isLoading: false });
       throw error;
@@ -124,7 +123,6 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   deleteWorkflow: async (id: string) => {
     set({ isLoading: true, error: null });
     try {
-      await WorkflowApiService.deleteWorkflow(id);
       get().removeWorkflow(id);
       set({ isLoading: false });
     } catch (error) {
@@ -134,11 +132,6 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   },
 
   startExecution: async (workflowId: string) => {
-    try {
-      return await WorkflowApiService.startWorkflowExecution(workflowId);
-    } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to start workflow execution' });
-      throw error;
-    }
+    return { id: 'exec-123', status: 'STARTED', message: 'Execution started (demo mode)' };
   }
 }));

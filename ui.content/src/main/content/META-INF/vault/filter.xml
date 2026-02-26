@@ -3,4 +3,7 @@
     <filter root="/content/aem-vercel-workflow"/>
     <filter root="/content/dam/aem-vercel-workflow"/>
     <filter root="/content/experience-fragments/aem-vercel-workflow"/>
+    <filter root="/home/users/system">
+        <include pattern="/home/users/system/aem-vercel-workflow-service"/>
+    </filter>
 </workspaceFilter>

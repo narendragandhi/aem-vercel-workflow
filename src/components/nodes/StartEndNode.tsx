@@ -20,7 +20,7 @@ export const StartEndNode: React.FC<NodeProps<StartEndNodeData>> = ({ data, sele
       {isStart && (
         <Handle
           type="source"
-          position="bottom"
+          position={Position.Bottom}
           className="w-3 h-3 bg-green-400"
         />
       )}
@@ -29,7 +29,7 @@ export const StartEndNode: React.FC<NodeProps<StartEndNodeData>> = ({ data, sele
       {!isStart && (
         <Handle
           type="target"
-          position="top"
+          position={Position.Top}
           className="w-3 h-3 bg-red-400"
         />
       )}

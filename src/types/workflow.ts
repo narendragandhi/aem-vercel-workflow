@@ -20,6 +20,10 @@ export interface WorkflowStep {
     config?: Record<string, any>;
     inputs?: WorkflowPort[];
     outputs?: WorkflowPort[];
+    isStart?: boolean;
+    participant?: string;
+    stepType?: string;
+    processType?: string;
   };
 }
 

@@ -1,10 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import DemoApp from './DemoApp';
+import LandingPage from './LandingPage';
 import './index.css';
+
+console.log('AEMFlow app loaded!');
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <DemoApp />
+    <LandingPage />
   </React.StrictMode>,
 );

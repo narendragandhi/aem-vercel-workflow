@@ -46,7 +46,7 @@ export const AEMStepNode: React.FC<NodeProps<AEMStepNodeData>> = ({ data, select
     >
       <Handle
         type="target"
-        position="top"
+        position={Position.Top}
         className="w-3 h-3 bg-gray-400 border-2 border-white"
       />
       
@@ -121,7 +121,7 @@ export const AEMStepNode: React.FC<NodeProps<AEMStepNodeData>> = ({ data, select
       
       <Handle
         type="source"
-        position="bottom"
+        position={Position.Bottom}
         className="w-3 h-3 bg-gray-400 border-2 border-white"
       />
     </div>

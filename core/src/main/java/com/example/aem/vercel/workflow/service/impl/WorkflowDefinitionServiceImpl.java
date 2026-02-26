@@ -4,6 +4,7 @@ import com.example.aem.vercel.workflow.model.WorkflowDefinitionModel;
 import com.example.aem.vercel.workflow.model.WorkflowStepModel;
 import com.example.aem.vercel.workflow.model.WorkflowEdgeModel;
 import com.example.aem.vercel.workflow.model.WorkflowExecutionModel;
+import com.example.aem.vercel.workflow.model.WorkflowPortModel;
 import com.example.aem.vercel.workflow.service.WorkflowDefinitionService;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -47,24 +48,31 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
 
     private WorkflowConfig config;
 
+    private ResourceResolver resourceResolver;
+    private Session session;
+
     @Activate
     protected void activate(WorkflowConfig config) {
         this.config = config;
-        initializeWorkflowsPath();
+        try {
+            Map<String, Object> param = new HashMap<>();
+            param.put(ResourceResolverFactory.SUBSERVICE, "workflow-definition-service");
+            this.resourceResolver = resourceResolverFactory.getServiceResourceResolver(param);
+            this.session = resourceResolver.adaptTo(Session.class);
+            initializeWorkflowsPath(this.session);
+        } catch (org.apache.sling.api.resource.LoginException e) {
+            LOG.error("Failed to get service resource resolver", e);
+        }
         LOG.info("WorkflowDefinitionService activated with cache enabled: {}", config.enableCache());
     }
 
-    private void initializeWorkflowsPath() {
-        try (ResourceResolver resolver = resourceResolverFactory.getServiceResourceResolver(null)) {
-            Session session = resolver.adaptTo(Session.class);
+    private void initializeWorkflowsPath(Session session) {
+        try {
             if (!session.nodeExists(WORKFLOWS_PATH)) {
                 Node workflowsNode = session.getRootNode().addNode(WORKFLOWS_PATH.substring(1), NODE_TYPE);
                 session.save();
                 LOG.info("Created workflows path: {}", WORKFLOWS_PATH);
             }
-        } catch (org.apache.sling.api.resource.LoginException e) {
-            LOG.error("Failed to obtain resource resolver: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to obtain resource resolver", e);
         } catch (Exception e) {
             LOG.error("Failed to initialize workflows path", e);
         }
@@ -90,8 +98,7 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
         workflow.setCreatedAt(System.currentTimeMillis());
         workflow.setUpdatedAt(System.currentTimeMillis());
 
-        try (ResourceResolver resolver = resourceResolverFactory.getServiceResourceResolver(null)) {
-            Session session = resolver.adaptTo(Session.class);
+        try {
             Node workflowsNode = session.getNode(WORKFLOWS_PATH);
             
             Node workflowNode = workflowsNode.addNode(workflow.getId(), WORKFLOW_NODE_TYPE);
@@ -105,9 +112,6 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
             LOG.info("Created workflow: {}", workflow.getId());
             return workflow;
             
-        } catch (org.apache.sling.api.resource.LoginException e) {
-            LOG.error("Failed to obtain resource resolver to create workflow", e);
-            throw new RuntimeException("Failed to obtain resource resolver", e);
         } catch (RepositoryException e) {
             LOG.error("Failed to create workflow", e);
             throw new RuntimeException("Failed to create workflow", e);
@@ -135,8 +139,7 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
             throw new IllegalArgumentException("Invalid workflow: " + String.join(", ", validation.getErrors()));
         }
 
-        try (ResourceResolver resolver = resourceResolverFactory.getServiceResourceResolver(null)) {
-            Session session = resolver.adaptTo(Session.class);
+        try {
             Node workflowNode = session.getNode(WORKFLOWS_PATH + "/" + id);
             saveWorkflowToNode(workflowNode, workflow);
             session.save();
@@ -148,9 +151,6 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
             LOG.info("Updated workflow: {}", id);
             return workflow;
             
-        } catch (org.apache.sling.api.resource.LoginException e) {
-            LOG.error("Failed to obtain resource resolver to update workflow: {}", id, e);
-            throw new RuntimeException("Failed to obtain resource resolver", e);
         } catch (RepositoryException e) {
             LOG.error("Failed to update workflow: {}", id, e);
             throw new RuntimeException("Failed to update workflow", e);
@@ -171,9 +171,9 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
             }
         }
 
-        try (ResourceResolver resolver = resourceResolverFactory.getServiceResourceResolver(null)) {
+        try {
             String path = WORKFLOWS_PATH + "/" + id;
-            Resource resource = resolver.getResource(path);
+            Resource resource = resourceResolver.getResource(path);
             
             if (resource != null) {
                 WorkflowDefinitionModel workflow = loadWorkflowFromResource(resource);
@@ -182,9 +182,6 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
                 }
                 return Optional.of(workflow);
             }
-        } catch (org.apache.sling.api.resource.LoginException e) {
-            LOG.error("Failed to obtain resource resolver to get workflow: {}", id, e);
-            return Optional.empty(); // Treat login failure as workflow not found for this method
         } catch (Exception e) {
             LOG.error("Failed to get workflow: {}", id, e);
         }
@@ -196,8 +193,8 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
     public List<WorkflowDefinitionModel> getAllWorkflows() {
         List<WorkflowDefinitionModel> workflows = new ArrayList<>();
         
-        try (ResourceResolver resolver = resourceResolverFactory.getServiceResourceResolver(null)) {
-            Resource workflowsResource = resolver.getResource(WORKFLOWS_PATH);
+        try {
+            Resource workflowsResource = resourceResolver.getResource(WORKFLOWS_PATH);
             if (workflowsResource != null) {
                 for (Resource child : workflowsResource.getChildren()) {
                     WorkflowDefinitionModel workflow = loadWorkflowFromResource(child);
@@ -209,9 +206,6 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
                     }
                 }
             }
-        } catch (org.apache.sling.api.resource.LoginException e) {
-            LOG.error("Failed to obtain resource resolver to get all workflows", e);
-            return Collections.emptyList(); // Return empty list on login failure
         } catch (Exception e) {
             LOG.error("Failed to get all workflows", e);
         }
@@ -225,8 +219,7 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
             return false;
         }
 
-        try (ResourceResolver resolver = resourceResolverFactory.getServiceResourceResolver(null)) {
-            Session session = resolver.adaptTo(Session.class);
+        try {
             String path = WORKFLOWS_PATH + "/" + id;
             
             if (session.nodeExists(path)) {
@@ -240,9 +233,6 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
                 LOG.info("Deleted workflow: {}", id);
                 return true;
             }
-        } catch (org.apache.sling.api.resource.LoginException e) {
-            LOG.error("Failed to obtain resource resolver to delete workflow: {}", id, e);
-            return false; // Return false on login failure
         } catch (RepositoryException e) {
             LOG.error("Failed to delete workflow: {}", id, e);
         }
@@ -483,6 +473,32 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
             stepClone.setPositionX(step.getPositionX());
             stepClone.setPositionY(step.getPositionY());
             stepClone.setData(new HashMap<>(step.getData()));
+
+            // Clone inputs
+            if (step.getInputs() != null) {
+                for (WorkflowPortModel input : step.getInputs()) {
+                    WorkflowPortModel inputClone = new WorkflowPortModel();
+                    inputClone.setId(input.getId());
+                    inputClone.setName(input.getName());
+                    inputClone.setType(input.getType());
+                    inputClone.setDataType(input.getDataType());
+                    inputClone.setRequired(input.isRequired());
+                    stepClone.addInput(inputClone);
+                }
+            }
+
+            // Clone outputs
+            if (step.getOutputs() != null) {
+                for (WorkflowPortModel output : step.getOutputs()) {
+                    WorkflowPortModel outputClone = new WorkflowPortModel();
+                    outputClone.setId(output.getId());
+                    outputClone.setName(output.getName());
+                    outputClone.setType(output.getType());
+                    outputClone.setDataType(output.getDataType());
+                    outputClone.setRequired(output.isRequired());
+                    stepClone.addOutput(outputClone);
+                }
+            }
             clone.addStep(stepClone);
         }
 

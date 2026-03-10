@@ -114,6 +114,83 @@
                     </instructions>
                 </configuration>
             </plugin>
+            <!-- Javadoc Plugin for API Documentation -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.6.3</version>
+                <configuration>
+                    <source>11</source>
+                    <show>protected</show>
+                    <nohelp>true</nohelp>
+                    <charset>UTF-8</charset>
+                    <docencoding>UTF-8</docencoding>
+                    <encoding>UTF-8</encoding>
+                    <doctitle>AEMFlow Core API ${project.version}</doctitle>
+                    <windowtitle>AEMFlow Core API</windowtitle>
+                    <bottom>
+                        <![CDATA[
+                        Copyright &#169; {currentYear} AEMFlow Team. All rights reserved.
+                        ]]>
+                    </bottom>
+                    <links>
+                        <link>https://docs.oracle.com/en/java/javase/11/docs/api/</link>
+                        <link>https://sling.apache.org/apidocs/sling11/</link>
+                    </links>
+                    <tags>
+                        <tag>
+                            <name>since</name>
+                            <placement>a</placement>
+                            <head>Since:</head>
+                        </tag>
+                        <tag>
+                            <name>version</name>
+                            <placement>a</placement>
+                            <head>Version:</head>
+                        </tag>
+                    </tags>
+                    <additionalOptions>
+                        <additionalOption>-Xdoclint:none</additionalOption>
+                    </additionalOptions>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Checkstyle Plugin for Code Quality -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>3.3.1</version>
+                <configuration>
+                    <configLocation>google_checks.xml</configLocation>
+                    <consoleOutput>true</consoleOutput>
+                    <failsOnError>false</failsOnError>
+                    <linkXRef>false</linkXRef>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
+
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.6.3</version>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>javadoc</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+        </plugins>
+    </reporting>
 </project>

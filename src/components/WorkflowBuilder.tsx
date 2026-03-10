@@ -14,13 +14,21 @@ import {
 import { Background, BackgroundVariant } from '@reactflow/background';
 import { Controls } from '@reactflow/controls';
 import { MiniMap } from '@reactflow/minimap';
-import { 
-  Save, Download, Upload, Trash2, User, Cog, 
+import {
+  Save, Download, Upload, Trash2, User, Cog,
   Plus, GitBranch, X, Library, Mail, Image, UserCheck,
   FileText, Globe, Route, ArrowRightCircle, Moon, Sun,
   Undo2, Redo2, Layout, BarChart3, AlertTriangle, CheckCircle,
-  Clock, Settings, Zap, RotateCcw, FileUp, Sparkles, Send, Loader2
+  Clock, Settings, Zap, RotateCcw, FileUp, Sparkles, Send, Loader2,
+  Play, Command, BookOpen, Grid3X3
 } from 'lucide-react';
+import { WorkflowSimulator } from './WorkflowSimulator';
+import { WorkflowAnalytics } from './WorkflowAnalytics';
+import { CommandPalette, createDefaultCommands } from './CommandPalette';
+import { TemplateGallery } from './TemplateGallery';
+import { DocumentationGenerator } from './DocumentationGenerator';
+import { ADVANCED_TEMPLATES } from '../data/advancedTemplates';
+import { exportToAEMXML, exportToJSON, exportToYAML, exportToMarkdown, generateMermaidDiagram, downloadFile } from '../utils/exporters';
 import { WorkflowDefinition, WorkflowStep, WorkflowEdge } from '../types/workflow';
 import { useWorkflowStore } from '../hooks/useWorkflowStore';
 import { AEMStepNode } from './nodes/AEMStepNode';
@@ -751,6 +759,13 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
   const [showStats, setShowStats] = useState(false);
   const [showValidation, setShowValidation] = useState(false);
   const [showAI, setShowAI] = useState(false);
+  const [showSimulator, setShowSimulator] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
+  const [showTemplateGallery, setShowTemplateGallery] = useState(false);
+  const [showDocGenerator, setShowDocGenerator] = useState(false);
+  const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(null);
+  const [highlightedPath, setHighlightedPath] = useState<string[]>([]);
   const [aiPrompt, setAiPrompt] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
   const [aiProvider, setAiProvider] = useState<AIProvider>('pattern');
@@ -769,115 +784,10 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
   const [history, setHistory] = useState<HistoryState[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const { saveWorkflow } = useWorkflowStore();
 
-  const stats = useMemo(() => {
-    const totalNodes = nodes.filter(n => n.type !== 'startEnd').length;
-    const participantNodes = nodes.filter(n => 
-      n.type === 'aemStep' || n.type === 'participantChooser' || n.type === 'graniteRouting'
-    ).length;
-    const processNodes = nodes.filter(n => 
-      n.type === 'processStep' || n.type === 'damUpdate' || n.type === 'damMetadata' ||
-      n.type === 'damTranscode' || n.type === 'formsProcess' || n.type === 'callWorkflow' ||
-      n.type === 'pageActivation'
-    ).length;
-    const branchNodes = nodes.filter(n => n.type === 'branch').length;
-    const emailNodes = nodes.filter(n => n.type === 'emailNotification').length;
-    const totalEdges = edges.length;
-    const connectedNodes = new Set<string>();
-    edges.forEach(e => { connectedNodes.add(e.source); connectedNodes.add(e.target); });
-    const orphanNodes = nodes.length - connectedNodes.size;
-    
-    return {
-      totalNodes,
-      participantNodes,
-      processNodes,
-      branchNodes,
-      emailNodes,
-      totalEdges,
-      orphanNodes,
-      complexity: totalNodes > 10 ? 'High' : totalNodes > 5 ? 'Medium' : 'Low',
-    };
-  }, [nodes, edges]);
-
-  const pushHistory = useCallback((newNodes: Node[], newEdges: Edge[]) => {
-    setHistory(prev => {
-      const newHistory = prev.slice(0, historyIndex + 1);
-      newHistory.push({ nodes: newNodes, edges: newEdges });
-      return newHistory.slice(-50);
-    });
-    setHistoryIndex(prev => Math.min(prev + 1, 49));
-  }, [historyIndex]);
-
-  const undo = useCallback(() => {
-    if (historyIndex > 0) {
-      const prevState = history[historyIndex - 1];
-      setNodes(prev => {
-        pushHistory(prev, edges);
-        return prev.map(n => {
-          const newNode = prevState.nodes.find(pn => pn.id === n.id);
-          return newNode || n;
-        });
-      });
-      setEdges(prev => {
-        const newEdges = prevState.edges;
-        return newEdges;
-      });
-      setHistoryIndex(historyIndex - 1);
-    }
-  }, [history, historyIndex, edges, setNodes, setEdges, pushHistory]);
-
-  const redo = useCallback(() => {
-    if (historyIndex < history.length - 1) {
-      const nextState = history[historyIndex + 1];
-      setNodes(nextState.nodes);
-      setEdges(nextState.edges);
-      setHistoryIndex(historyIndex + 1);
-    }
-  }, [history, historyIndex, setNodes, setEdges]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
-        e.preventDefault();
-        undo();
-      } else if ((e.metaKey || e.ctrlKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
-        e.preventDefault();
-        redo();
-      } else if ((e.metaKey || e.ctrlKey) && e.key === 's') {
-        e.preventDefault();
-        handleSave();
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [undo, redo]);
-
-  useEffect(() => {
-    if (autoSaveEnabled && nodes.length > 0) {
-      const timer = setTimeout(() => {
-        const data = { nodes, edges, savedAt: new Date().toISOString() };
-        localStorage.setItem('aemflow-workflow', JSON.stringify(data));
-        localStorage.setItem('aemflow-autosave', 'enabled');
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [nodes, edges, autoSaveEnabled]);
-
-  useEffect(() => {
-    const saved = localStorage.getItem('aemflow-workflow');
-    const autoSave = localStorage.getItem('aemflow-autosave');
-    if (autoSave === 'enabled' && saved) {
-      const data = JSON.parse(saved);
-      if (data.nodes && data.nodes.length > 0) {
-        setNodes(data.nodes || []);
-        setEdges(data.edges || []);
-      }
-    }
-  }, []);
-
+  // IMPORTANT: Define initialNodes/initialEdges FIRST, then use them in useNodesState/useEdgesState
   const initialNodes = useMemo(() => {
     if (workflow?.steps?.length) {
       return workflow.steps.map((step): Node => ({
@@ -924,6 +834,141 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  // Stats computation
+  const stats = useMemo(() => {
+    const nodeTypes = nodes.reduce((acc, node) => {
+      const type = node.type || 'unknown';
+      acc[type] = (acc[type] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    // Find orphan nodes (no incoming or outgoing edges)
+    const connectedNodeIds = new Set<string>();
+    edges.forEach(edge => {
+      connectedNodeIds.add(edge.source);
+      connectedNodeIds.add(edge.target);
+    });
+    const orphanNodes = nodes.filter(n =>
+      n.type !== 'startEnd' && !connectedNodeIds.has(n.id)
+    ).length;
+
+    // Calculate complexity
+    const branchCount = nodeTypes.branch || 0;
+    const totalSteps = nodes.length;
+    let complexity: 'Low' | 'Medium' | 'High' = 'Low';
+    if (branchCount > 3 || totalSteps > 15) complexity = 'High';
+    else if (branchCount > 1 || totalSteps > 8) complexity = 'Medium';
+
+    return {
+      totalNodes: nodes.length,
+      totalEdges: edges.length,
+      nodeTypes,
+      participantNodes: nodeTypes.aemStep || 0,
+      processNodes: nodeTypes.processStep || 0,
+      branchNodes: nodeTypes.branch || 0,
+      emailNodes: nodeTypes.emailNotification || 0,
+      orphanNodes,
+      complexity,
+    };
+  }, [nodes, edges]);
+
+  // History management for undo/redo
+  const pushHistory = useCallback((newNodes: Node[], newEdges: Edge[]) => {
+    setHistory(prev => {
+      const newHistory = prev.slice(0, historyIndex + 1);
+      newHistory.push({ nodes: newNodes, edges: newEdges });
+      return newHistory.slice(-50); // Keep last 50 states
+    });
+    setHistoryIndex(prev => Math.min(prev + 1, 49));
+  }, [historyIndex]);
+
+  const undo = useCallback(() => {
+    if (historyIndex > 0) {
+      const prevState = history[historyIndex - 1];
+      setNodes(prevState.nodes);
+      setEdges(prevState.edges);
+      setHistoryIndex(prev => prev - 1);
+    }
+  }, [history, historyIndex, setNodes, setEdges]);
+
+  const redo = useCallback(() => {
+    if (historyIndex < history.length - 1) {
+      const nextState = history[historyIndex + 1];
+      setNodes(nextState.nodes);
+      setEdges(nextState.edges);
+      setHistoryIndex(prev => prev + 1);
+    }
+  }, [history, historyIndex, setNodes, setEdges]);
+
+  // Initialize history with current state
+  useEffect(() => {
+    if (history.length === 0) {
+      pushHistory(nodes, edges);
+    }
+  }, []); // Only on mount
+
+  // Auto-save effect
+  useEffect(() => {
+    if (autoSaveEnabled && nodes.length > 0) {
+      const saveTimer = setTimeout(() => {
+        saveWorkflow({
+          id: workflow?.id || 'draft',
+          name: workflow?.name || 'Untitled Workflow',
+          steps: nodes.map(n => ({
+            id: n.id,
+            type: n.type || 'unknown',
+            position: n.position,
+            data: n.data,
+          })),
+          edges: edges.map(e => ({
+            id: e.id,
+            source: e.source,
+            target: e.target,
+            sourceHandle: e.sourceHandle ?? undefined,
+            targetHandle: e.targetHandle ?? undefined,
+            type: e.type,
+          })),
+          createdAt: workflow?.createdAt || new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          createdBy: workflow?.createdBy || 'anonymous',
+        });
+      }, 2000);
+      return () => clearTimeout(saveTimer);
+    }
+  }, [nodes, edges, autoSaveEnabled, workflow, saveWorkflow]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd/Ctrl + K for command palette
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowCommandPalette(true);
+      }
+      // Cmd/Ctrl + Z for undo
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      }
+      // Cmd/Ctrl + Shift + Z for redo
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'z') {
+        e.preventDefault();
+        redo();
+      }
+      // Escape to close modals
+      if (e.key === 'Escape') {
+        setShowCommandPalette(false);
+        setShowSimulator(false);
+        setShowAnalytics(false);
+        setShowTemplateGallery(false);
+        setShowDocGenerator(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [undo, redo]);
 
   const onConnect = useCallback(
     (params: Connection) => {
@@ -1079,6 +1124,67 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
     setShowTemplates(false);
   }, [setNodes, setEdges, readOnly, pushHistory]);
 
+  // Handler for loading templates from gallery
+  const handleLoadTemplateFromGallery = useCallback((template: any) => {
+    const newNodes = template.nodes.map((n: any, i: number) => ({
+      ...n,
+      id: `${template.id}-${Date.now()}-${i}`,
+      draggable: !readOnly,
+    }));
+
+    const nodeIdMap: Record<string, string> = {};
+    template.nodes.forEach((n: any, i: number) => {
+      nodeIdMap[n.id] = newNodes[i].id;
+    });
+
+    const newEdges = template.edges.map((e: any, i: number) => ({
+      ...e,
+      id: `edge-${Date.now()}-${i}`,
+      source: nodeIdMap[e.source] || e.source,
+      target: nodeIdMap[e.target] || e.target,
+      animated: true,
+    }));
+
+    setNodes(newNodes);
+    setEdges(newEdges);
+    pushHistory(newNodes, newEdges);
+    setShowTemplateGallery(false);
+  }, [setNodes, setEdges, readOnly, pushHistory]);
+
+  // Highlight node during simulation
+  const handleHighlightNode = useCallback((nodeId: string | null) => {
+    setHighlightedNodeId(nodeId);
+  }, []);
+
+  // Highlight path during simulation
+  const handleHighlightPath = useCallback((nodeIds: string[]) => {
+    setHighlightedPath(nodeIds);
+  }, []);
+
+  // Export handlers for different formats
+  const handleExportJSON = useCallback(() => {
+    const json = exportToJSON(nodes, edges, { prettyPrint: true });
+    downloadFile(json, 'workflow.json', 'application/json');
+  }, [nodes, edges]);
+
+  const handleExportYAML = useCallback(() => {
+    const yaml = exportToYAML(nodes, edges);
+    downloadFile(yaml, 'workflow.yaml', 'text/yaml');
+  }, [nodes, edges]);
+
+  const handleExportMarkdown = useCallback(() => {
+    const md = exportToMarkdown(nodes, edges, {
+      workflowName: workflow?.name || 'Workflow',
+      includeDescription: true,
+    });
+    downloadFile(md, 'workflow.md', 'text/markdown');
+  }, [nodes, edges, workflow]);
+
+  const handleExportMermaid = useCallback(() => {
+    const mermaid = generateMermaidDiagram(nodes, edges);
+    downloadFile(mermaid, 'workflow.mmd', 'text/plain');
+  }, [nodes, edges]);
+
   const handleExport = useCallback(() => {
     const result = validateWorkflow(nodes, edges);
     setValidationResult(result);
@@ -1215,6 +1321,35 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
       console.error('Error saving workflow:', error);
     }
   }, [nodes, edges, workflow, onSave, saveWorkflow]);
+
+  // Create command palette commands
+  const commands = useMemo(() => createDefaultCommands({
+    onSave: saveToLocalStorage,
+    onLoad: loadFromLocalStorage,
+    onUndo: undo,
+    onRedo: redo,
+    onAutoLayout: handleAutoLayout,
+    onExport: handleExport,
+    onExportJSON: handleExportJSON,
+    onExportYAML: handleExportYAML,
+    onExportMarkdown: handleExportMarkdown,
+    onShowSimulator: () => setShowSimulator(true),
+    onShowAnalytics: () => setShowAnalytics(true),
+    onShowTemplates: () => setShowTemplateGallery(true),
+    onShowDocGenerator: () => setShowDocGenerator(true),
+    onToggleDarkMode: () => setDarkMode(d => !d),
+    onNewWorkflow: () => {
+      if (window.confirm('Start a new workflow? This will clear the current workflow.')) {
+        setNodes([
+          { id: 'start', type: 'startEnd', position: { x: 300, y: 50 }, data: { label: 'Start', isStart: true }, draggable: !readOnly },
+          { id: 'end', type: 'startEnd', position: { x: 300, y: 400 }, data: { label: 'End', isStart: false }, draggable: !readOnly },
+        ]);
+        setEdges([]);
+      }
+    },
+    onAddNode: addNode,
+    onFitView: () => {}, // Can be connected to ReactFlow fitView
+  }), [saveToLocalStorage, loadFromLocalStorage, undo, redo, handleAutoLayout, handleExport, handleExportJSON, handleExportYAML, handleExportMarkdown, readOnly, setNodes, setEdges, addNode]);
 
   const theme = darkMode ? darkTheme : lightTheme;
   const bgColor = darkMode ? '#0f172a' : '#f8fafc';
@@ -1551,10 +1686,57 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
         </div>
       )}
 
+      {/* Workflow Simulator */}
+      {showSimulator && (
+        <WorkflowSimulator
+          nodes={nodes}
+          edges={edges}
+          onClose={() => setShowSimulator(false)}
+          onHighlightNode={handleHighlightNode}
+          onHighlightPath={handleHighlightPath}
+          darkMode={darkMode}
+        />
+      )}
+
+      {/* Workflow Analytics */}
+      {showAnalytics && (
+        <WorkflowAnalytics
+          nodes={nodes}
+          edges={edges}
+          onClose={() => setShowAnalytics(false)}
+          darkMode={darkMode}
+        />
+      )}
+
+      {/* Command Palette */}
+      <CommandPalette
+        isOpen={showCommandPalette}
+        onClose={() => setShowCommandPalette(false)}
+        commands={commands}
+        darkMode={darkMode}
+      />
+
+      {/* Template Gallery */}
+      <TemplateGallery
+        isOpen={showTemplateGallery}
+        onSelectTemplate={handleLoadTemplateFromGallery}
+        onClose={() => setShowTemplateGallery(false)}
+        darkMode={darkMode}
+      />
+
+      {/* Documentation Generator */}
+      <DocumentationGenerator
+        isOpen={showDocGenerator}
+        nodes={nodes}
+        edges={edges}
+        onClose={() => setShowDocGenerator(false)}
+        darkMode={darkMode}
+      />
+
       {!readOnly && (
-        <div style={{ 
-          width: '200px', 
-          background: panelBg, 
+        <div style={{
+          width: '200px',
+          background: panelBg,
           borderRight: `1px solid ${borderColor}`,
           padding: '16px',
           display: 'flex',
@@ -1565,7 +1747,7 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
           <div style={{ fontWeight: 'bold', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Zap size={16} /> Add Nodes
           </div>
-          
+
           <button onClick={() => addNode('aemStep')} style={{...nodeButtonStyle, color: '#3b82f6', borderColor: '#3b82f6', background: darkMode ? '#1e293b' : 'white'}}>
             <User size={16} /> AEM Step
           </button>
@@ -1712,11 +1894,26 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
               <button onClick={handleAutoLayout} style={{...topButtonStyle, background: '#8b5cf6'}} title="Auto Layout">
                 <Layout size={16} /> Layout
               </button>
-              <button onClick={() => setShowStats(true)} style={{...topButtonStyle, background: '#06b6d4'}}>
+              <button onClick={() => setShowSimulator(true)} style={{...topButtonStyle, background: '#10b981'}} title="Simulate Workflow">
+                <Play size={16} /> Simulate
+              </button>
+              <button onClick={() => setShowAnalytics(true)} style={{...topButtonStyle, background: '#06b6d4'}} title="Analytics Dashboard">
+                <BarChart3 size={16} /> Analytics
+              </button>
+              <button onClick={() => setShowStats(true)} style={{...topButtonStyle, background: '#64748b'}} title="Quick Stats">
                 <BarChart3 size={16} /> Stats
+              </button>
+              <button onClick={() => setShowTemplateGallery(true)} style={{...topButtonStyle, background: '#0ea5e9'}} title="Template Gallery">
+                <Grid3X3 size={16} /> Gallery
               </button>
               <button onClick={() => setShowTemplates(true)} style={{...topButtonStyle, background: '#0ea5e9'}}>
                 <Library size={16} /> Templates
+              </button>
+              <button onClick={() => setShowDocGenerator(true)} style={{...topButtonStyle, background: '#8b5cf6'}} title="Generate Documentation">
+                <BookOpen size={16} /> Docs
+              </button>
+              <button onClick={() => setShowCommandPalette(true)} style={{...topButtonStyle, background: '#475569'}} title="Command Palette (Cmd+K)">
+                <Command size={16} />
               </button>
               <button onClick={() => setShowAI(true)} style={{...topButtonStyle, background: 'linear-gradient(135deg, #8b5cf6, #d946ef)', fontWeight: 'bold'}}>
                 <Sparkles size={16} /> AI Generate

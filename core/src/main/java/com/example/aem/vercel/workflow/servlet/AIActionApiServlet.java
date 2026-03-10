@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -43,12 +44,12 @@ public class AIActionApiServlet extends SlingAllMethodsServlet {
         try {
             String path = request.getPathInfo();
             String[] selectors = request.getRequestPathInfo().getSelectors();
+            String[] segments = getPathSegments(path);
 
             if (selectors.length > 0 && "search".equals(selectors[0])) {
                 handleSearch(request, response);
-            } else if (path != null && path.contains("/")) {
-                String actionId = path.substring(path.lastIndexOf("/") + 1);
-                handleGetAction(actionId, response);
+            } else if (segments.length > 0) {
+                handleGetAction(segments[0], response);
             } else {
                 handleListActions(request, response);
             }
@@ -64,19 +65,27 @@ public class AIActionApiServlet extends SlingAllMethodsServlet {
     protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException {
         try {
             String path = request.getPathInfo();
-            
-            if (path != null && path.contains("/")) {
-                String actionId = path.substring(path.lastIndexOf("/") + 1);
-                
-                if (path.contains("/execute")) {
-                    handleExecuteAction(actionId, request, response);
-                } else if (path.contains("/test")) {
-                    handleTestAction(actionId, request, response);
-                } else if (path.contains("/clone")) {
-                    handleCloneAction(actionId, request, response);
+            String[] segments = getPathSegments(path);
+            if (segments.length > 0) {
+                String actionId = segments[0];
+                if (segments.length > 1) {
+                    switch (segments[1]) {
+                        case "execute":
+                            handleExecuteAction(actionId, request, response);
+                            break;
+                        case "test":
+                            handleTestAction(actionId, request, response);
+                            break;
+                        case "clone":
+                            handleCloneAction(actionId, request, response);
+                            break;
+                        default:
+                            sendErrorResponse(response, HttpServletResponse.SC_BAD_REQUEST,
+                                              "Invalid POST operation");
+                    }
                 } else {
-                    sendErrorResponse(response, HttpServletResponse.SC_BAD_REQUEST, 
-                                      "Invalid POST operation");
+                    sendErrorResponse(response, HttpServletResponse.SC_BAD_REQUEST,
+                                      "Action ID is required for POST operations");
                 }
             } else {
                 handleCreateAction(request, response);
@@ -93,13 +102,14 @@ public class AIActionApiServlet extends SlingAllMethodsServlet {
     protected void doPut(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException {
         try {
             String path = request.getPathInfo();
-            if (path == null || !path.contains("/")) {
+            String[] segments = getPathSegments(path);
+            if (segments.length == 0) {
                 sendErrorResponse(response, HttpServletResponse.SC_BAD_REQUEST, 
                                   "Action ID is required for PUT operations");
                 return;
             }
 
-            String actionId = path.substring(path.lastIndexOf("/") + 1);
+            String actionId = segments[0];
             handleUpdateAction(actionId, request, response);
 
         } catch (Exception e) {
@@ -113,13 +123,14 @@ public class AIActionApiServlet extends SlingAllMethodsServlet {
     protected void doDelete(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException {
         try {
             String path = request.getPathInfo();
-            if (path == null || !path.contains("/")) {
+            String[] segments = getPathSegments(path);
+            if (segments.length == 0) {
                 sendErrorResponse(response, HttpServletResponse.SC_BAD_REQUEST, 
                                   "Action ID is required for DELETE operations");
                 return;
             }
 
-            String actionId = path.substring(path.lastIndexOf("/") + 1);
+            String actionId = segments[0];
             handleDeleteAction(actionId, response);
 
         } catch (Exception e) {
@@ -303,6 +314,15 @@ public class AIActionApiServlet extends SlingAllMethodsServlet {
         response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
         
         objectMapper.writeValue(response.getWriter(), data);
+    }
+
+    private String[] getPathSegments(String pathInfo) {
+        if (pathInfo == null || pathInfo.isEmpty()) {
+            return new String[0];
+        }
+        return Arrays.stream(pathInfo.split("/"))
+            .filter(segment -> !segment.isEmpty())
+            .toArray(String[]::new);
     }
 
     private void sendErrorResponse(SlingHttpServletResponse response, int status, String message) throws IOException {

@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -43,13 +44,13 @@ public class AIActionExecutionApiServlet extends SlingAllMethodsServlet {
         try {
             String path = request.getPathInfo();
             String[] selectors = request.getRequestPathInfo().getSelectors();
+            String[] segments = getPathSegments(path);
 
             if (selectors.length > 0 && "stats".equals(selectors[0])) {
                 handleStatistics(request, response);
-            } else if (path != null && path.contains("/")) {
-                String executionId = path.substring(path.lastIndexOf("/") + 1);
-                
-                if (path.contains("/cancel")) {
+            } else if (segments.length > 0) {
+                String executionId = segments[0];
+                if (segments.length > 1 && "cancel".equals(segments[1])) {
                     handleCancelExecution(executionId, response);
                 } else {
                     handleGetExecution(executionId, response);
@@ -69,11 +70,12 @@ public class AIActionExecutionApiServlet extends SlingAllMethodsServlet {
     protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException {
         try {
             String path = request.getPathInfo();
+            String[] segments = getPathSegments(path);
             
-            if (path != null && path.contains("/")) {
-                String executionId = path.substring(path.lastIndexOf("/") + 1);
+            if (segments.length > 0) {
+                String executionId = segments[0];
                 
-                if (path.contains("/retry")) {
+                if (segments.length > 1 && "retry".equals(segments[1])) {
                     handleRetryExecution(executionId, request, response);
                 } else {
                     sendErrorResponse(response, HttpServletResponse.SC_BAD_REQUEST, 
@@ -95,13 +97,14 @@ public class AIActionExecutionApiServlet extends SlingAllMethodsServlet {
     protected void doDelete(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException {
         try {
             String path = request.getPathInfo();
-            if (path == null || !path.contains("/")) {
+            String[] segments = getPathSegments(path);
+            if (segments.length == 0) {
                 sendErrorResponse(response, HttpServletResponse.SC_BAD_REQUEST, 
                                   "Execution ID is required for DELETE operations");
                 return;
             }
 
-            String executionId = path.substring(path.lastIndexOf("/") + 1);
+            String executionId = segments[0];
             handleDeleteExecution(executionId, response);
 
         } catch (Exception e) {
@@ -270,6 +273,15 @@ public class AIActionExecutionApiServlet extends SlingAllMethodsServlet {
         );
         
         sendJsonResponse(response, status, error);
+    }
+
+    private String[] getPathSegments(String pathInfo) {
+        if (pathInfo == null || pathInfo.isEmpty()) {
+            return new String[0];
+        }
+        return Arrays.stream(pathInfo.split("/"))
+            .filter(segment -> !segment.isEmpty())
+            .toArray(String[]::new);
     }
 
     @Override

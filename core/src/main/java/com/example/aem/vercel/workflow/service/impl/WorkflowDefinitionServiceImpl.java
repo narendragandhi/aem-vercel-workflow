@@ -19,14 +19,45 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Implementation of WorkflowDefinitionService.
- * Stores workflow definitions in JCR under /var/workflows/definitions
+ * OSGi service implementation for managing workflow definitions.
+ *
+ * <p>This service provides CRUD operations for workflow definitions stored
+ * in the AEM JCR repository. Workflows are persisted under
+ * {@code /var/workflows/definitions} with caching support for improved
+ * read performance.</p>
+ *
+ * <h2>Features</h2>
+ * <ul>
+ *   <li>Create, read, update, and delete workflow definitions</li>
+ *   <li>In-memory caching with configurable enable/disable</li>
+ *   <li>Workflow validation with detailed error reporting</li>
+ *   <li>Workflow duplication with unique ID generation</li>
+ *   <li>Search by name, description, or creator</li>
+ *   <li>Input sanitization to prevent path traversal attacks</li>
+ * </ul>
+ *
+ * <h2>Configuration</h2>
+ * <p>The service is configured via {@link WorkflowConfig} OSGi configuration:</p>
+ * <ul>
+ *   <li>{@code enableCache} - Enable/disable in-memory caching</li>
+ * </ul>
+ *
+ * <h2>Security</h2>
+ * <p>All workflow IDs are sanitized to prevent JCR path traversal attacks.
+ * The service uses a dedicated service user for repository access.</p>
+ *
+ * @author AEMFlow Team
+ * @version 2.0.0
+ * @since 1.0.0
+ * @see WorkflowDefinitionService
+ * @see WorkflowDefinitionModel
  */
 @Component(
     service = WorkflowDefinitionService.class,
@@ -35,20 +66,32 @@ import java.util.concurrent.ConcurrentHashMap;
 @Designate(ocd = WorkflowConfig.class)
 public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService {
 
+    /** Logger for this service. */
     private static final Logger LOG = LoggerFactory.getLogger(WorkflowDefinitionServiceImpl.class);
-    
+
+    /** JCR path where workflow definitions are stored. */
     private static final String WORKFLOWS_PATH = "/var/workflows/definitions";
+
+    /** Default node type for workflow storage nodes. */
     private static final String NODE_TYPE = "nt:unstructured";
+
+    /** Custom node type for workflow definition nodes. */
     private static final String WORKFLOW_NODE_TYPE = "vercel:workflow";
-    
+
+    /** Thread-safe cache for workflow definitions. */
     private final Map<String, WorkflowDefinitionModel> cache = new ConcurrentHashMap<>();
 
+    /** Factory for obtaining resource resolvers. */
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
 
+    /** OSGi configuration for this service. */
     private WorkflowConfig config;
 
+    /** Resource resolver for JCR access. */
     private ResourceResolver resourceResolver;
+
+    /** JCR session for node operations. */
     private Session session;
 
     @Activate
@@ -68,11 +111,7 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
 
     private void initializeWorkflowsPath(Session session) {
         try {
-            if (!session.nodeExists(WORKFLOWS_PATH)) {
-                Node workflowsNode = session.getRootNode().addNode(WORKFLOWS_PATH.substring(1), NODE_TYPE);
-                session.save();
-                LOG.info("Created workflows path: {}", WORKFLOWS_PATH);
-            }
+            ensurePathExists(WORKFLOWS_PATH, NODE_TYPE);
         } catch (Exception e) {
             LOG.error("Failed to initialize workflows path", e);
         }
@@ -99,7 +138,7 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
         workflow.setUpdatedAt(System.currentTimeMillis());
 
         try {
-            Node workflowsNode = session.getNode(WORKFLOWS_PATH);
+            Node workflowsNode = ensurePathExists(WORKFLOWS_PATH, NODE_TYPE);
             
             Node workflowNode = workflowsNode.addNode(workflow.getId(), WORKFLOW_NODE_TYPE);
             saveWorkflowToNode(workflowNode, workflow);
@@ -120,17 +159,18 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
 
     @Override
     public WorkflowDefinitionModel updateWorkflow(String id, WorkflowDefinitionModel workflow) {
-        if (id == null || id.isEmpty()) {
+        String sanitizedId = sanitizeId(id);
+        if (sanitizedId == null || sanitizedId.isEmpty()) {
             throw new IllegalArgumentException("Workflow ID cannot be null");
         }
         
-        Optional<WorkflowDefinitionModel> existing = getWorkflow(id);
+        Optional<WorkflowDefinitionModel> existing = getWorkflow(sanitizedId);
         if (existing.isEmpty()) {
-            throw new IllegalArgumentException("Workflow not found: " + id);
+            throw new IllegalArgumentException("Workflow not found: " + sanitizedId);
         }
 
         WorkflowDefinitionModel existingWorkflow = existing.get();
-        workflow.setId(id);
+        workflow.setId(sanitizedId);
         workflow.setCreatedAt(existingWorkflow.getCreatedAt());
         workflow.setUpdatedAt(System.currentTimeMillis());
 
@@ -140,50 +180,51 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
         }
 
         try {
-            Node workflowNode = session.getNode(WORKFLOWS_PATH + "/" + id);
+            Node workflowNode = session.getNode(WORKFLOWS_PATH + "/" + sanitizedId);
             saveWorkflowToNode(workflowNode, workflow);
             session.save();
 
             if (config.enableCache()) {
-                cache.put(id, workflow);
+                cache.put(sanitizedId, workflow);
             }
 
-            LOG.info("Updated workflow: {}", id);
+            LOG.info("Updated workflow: {}", sanitizedId);
             return workflow;
             
         } catch (RepositoryException e) {
-            LOG.error("Failed to update workflow: {}", id, e);
+            LOG.error("Failed to update workflow: {}", sanitizedId, e);
             throw new RuntimeException("Failed to update workflow", e);
         }
     }
 
     @Override
     public Optional<WorkflowDefinitionModel> getWorkflow(String id) {
-        if (id == null || id.isEmpty()) {
+        String sanitizedId = sanitizeId(id);
+        if (sanitizedId == null || sanitizedId.isEmpty()) {
             return Optional.empty();
         }
 
         // Check cache first
         if (config.enableCache()) {
-            WorkflowDefinitionModel cached = cache.get(id);
+            WorkflowDefinitionModel cached = cache.get(sanitizedId);
             if (cached != null) {
                 return Optional.of(cached);
             }
         }
 
         try {
-            String path = WORKFLOWS_PATH + "/" + id;
+            String path = WORKFLOWS_PATH + "/" + sanitizedId;
             Resource resource = resourceResolver.getResource(path);
             
             if (resource != null) {
                 WorkflowDefinitionModel workflow = loadWorkflowFromResource(resource);
                 if (workflow != null && config.enableCache()) {
-                    cache.put(id, workflow);
+                    cache.put(sanitizedId, workflow);
                 }
                 return Optional.of(workflow);
             }
         } catch (Exception e) {
-            LOG.error("Failed to get workflow: {}", id, e);
+            LOG.error("Failed to get workflow: {}", sanitizedId, e);
         }
 
         return Optional.empty();
@@ -215,26 +256,27 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
 
     @Override
     public boolean deleteWorkflow(String id) {
-        if (id == null || id.isEmpty()) {
+        String sanitizedId = sanitizeId(id);
+        if (sanitizedId == null || sanitizedId.isEmpty()) {
             return false;
         }
 
         try {
-            String path = WORKFLOWS_PATH + "/" + id;
+            String path = WORKFLOWS_PATH + "/" + sanitizedId;
             
             if (session.nodeExists(path)) {
                 session.getNode(path).remove();
                 session.save();
                 
                 if (config.enableCache()) {
-                    cache.remove(id);
+                    cache.remove(sanitizedId);
                 }
                 
-                LOG.info("Deleted workflow: {}", id);
+                LOG.info("Deleted workflow: {}", sanitizedId);
                 return true;
             }
         } catch (RepositoryException e) {
-            LOG.error("Failed to delete workflow: {}", id, e);
+            LOG.error("Failed to delete workflow: {}", sanitizedId, e);
         }
 
         return false;
@@ -364,7 +406,13 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
         node.setProperty("updatedAt", workflow.getUpdatedAt());
 
         // Save steps
-        Node stepsNode = node.hasNode("steps") ? node.getNode("steps") : node.addNode("steps", NODE_TYPE);
+        Node stepsNode;
+        if (node.hasNode("steps")) {
+            stepsNode = node.getNode("steps");
+            clearChildNodes(stepsNode);
+        } else {
+            stepsNode = node.addNode("steps", NODE_TYPE);
+        }
         for (var step : workflow.getSteps()) {
             Node stepNode = stepsNode.addNode(step.getId(), NODE_TYPE);
             stepNode.setProperty("type", step.getType());
@@ -375,7 +423,13 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
         }
 
         // Save edges
-        Node edgesNode = node.hasNode("edges") ? node.getNode("edges") : node.addNode("edges", NODE_TYPE);
+        Node edgesNode;
+        if (node.hasNode("edges")) {
+            edgesNode = node.getNode("edges");
+            clearChildNodes(edgesNode);
+        } else {
+            edgesNode = node.addNode("edges", NODE_TYPE);
+        }
         for (var edge : workflow.getEdges()) {
             Node edgeNode = edgesNode.addNode(edge.getId(), NODE_TYPE);
             edgeNode.setProperty("source", edge.getSource());
@@ -386,8 +440,11 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
         }
 
         // Save variables
+        if (node.hasNode("variables")) {
+            node.getNode("variables").remove();
+        }
         if (!workflow.getVariables().isEmpty()) {
-            Node variablesNode = node.hasNode("variables") ? node.getNode("variables") : node.addNode("variables", NODE_TYPE);
+            Node variablesNode = node.addNode("variables", NODE_TYPE);
             for (Map.Entry<String, Object> entry : workflow.getVariables().entrySet()) {
                 variablesNode.setProperty(entry.getKey(), entry.getValue().toString());
             }
@@ -521,5 +578,35 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
         return clone;
     }
 
+    private Node ensurePathExists(String path, String nodeType) throws RepositoryException {
+        if (session.nodeExists(path)) {
+            return session.getNode(path);
+        }
+        String normalized = path.startsWith(\"/\") ? path.substring(1) : path;
+        String[] parts = normalized.split(\"/\");
+        Node current = session.getRootNode();
+        for (String part : parts) {
+            if (current.hasNode(part)) {
+                current = current.getNode(part);
+            } else {
+                current = current.addNode(part, nodeType);
+            }
+        }
+        session.save();
+        return current;
+    }
+
+    private void clearChildNodes(Node parent) throws RepositoryException {
+        NodeIterator children = parent.getNodes();
+        while (children.hasNext()) {
+            children.nextNode().remove();
+        }
+    }
+
+    private String sanitizeId(String id) {
+        if (id == null) return null;
+        // Only allow alphanumeric, hyphen, underscore to prevent path traversal
+        return id.replaceAll("[^a-zA-Z0-9-_]", "");
+    }
 
 }

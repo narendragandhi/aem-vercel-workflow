@@ -23,7 +23,15 @@ import javax.jcr.Value; // Import Value
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -367,16 +375,174 @@ public class AIActionServiceImpl implements AIActionService {
 
     @Override
     public List<AIActionModel> importActions(Map<String, Object> configuration) throws Exception {
-        // TODO: Implementation for bulk import
+        LOG.info("Importing AI actions from configuration");
         List<AIActionModel> importedActions = new ArrayList<>();
-        return importedActions;
+
+        try {
+            // Get actions array from configuration
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> actionsData = (List<Map<String, Object>>) configuration.get("actions");
+
+            if (actionsData == null || actionsData.isEmpty()) {
+                LOG.warn("No actions found in import configuration");
+                return importedActions;
+            }
+
+            // Import options
+            boolean overwriteExisting = Boolean.TRUE.equals(configuration.get("overwriteExisting"));
+            boolean preserveIds = Boolean.TRUE.equals(configuration.get("preserveIds"));
+
+            for (Map<String, Object> actionData : actionsData) {
+                try {
+                    AIActionModel action = new AIActionModel();
+
+                    // Set ID - either preserve original or generate new
+                    String originalId = (String) actionData.get("id");
+                    if (preserveIds && originalId != null) {
+                        action.setId(originalId);
+                    } else {
+                        action.setId(UUID.randomUUID().toString());
+                    }
+
+                    // Set required fields
+                    action.setName((String) actionData.get("name"));
+                    action.setDescription((String) actionData.getOrDefault("description", ""));
+                    action.setActionType((String) actionData.getOrDefault("actionType", "generate"));
+                    action.setCategory((String) actionData.getOrDefault("category", "general"));
+                    action.setTargetType((String) actionData.getOrDefault("targetType", "content"));
+                    action.setAiProvider((String) actionData.getOrDefault("aiProvider", "openai"));
+                    action.setModel((String) actionData.getOrDefault("model", "gpt-4"));
+                    action.setVersion((String) actionData.getOrDefault("version", "1"));
+                    action.setStatus((String) actionData.getOrDefault("status", "active"));
+                    action.setEnabled((String) actionData.getOrDefault("enabled", "true"));
+
+                    // Set optional array fields
+                    @SuppressWarnings("unchecked")
+                    List<String> tagsList = (List<String>) actionData.get("tags");
+                    if (tagsList != null) {
+                        action.setTags(tagsList.toArray(new String[0]));
+                    }
+
+                    @SuppressWarnings("unchecked")
+                    List<String> contentTypesList = (List<String>) actionData.get("contentTypes");
+                    if (contentTypesList != null) {
+                        action.setContentTypes(contentTypesList.toArray(new String[0]));
+                    }
+
+                    // Set complex fields
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> configMap = (Map<String, Object>) actionData.get("configuration");
+                    if (configMap != null) {
+                        action.setConfiguration(configMap);
+                    }
+
+                    action.setPromptTemplate((String) actionData.get("promptTemplate"));
+
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> outputSchema = (Map<String, Object>) actionData.get("outputSchema");
+                    if (outputSchema != null) {
+                        action.setOutputSchema(outputSchema);
+                    }
+
+                    // Check if action exists
+                    boolean exists = false;
+                    try {
+                        getAction(action.getId());
+                        exists = true;
+                    } catch (Exception e) {
+                        // Action doesn't exist - this is fine
+                    }
+
+                    if (exists && !overwriteExisting) {
+                        LOG.info("Skipping existing action: {} (overwrite disabled)", action.getId());
+                        continue;
+                    }
+
+                    if (exists) {
+                        updateAction(action.getId(), action);
+                        LOG.info("Updated existing action: {}", action.getId());
+                    } else {
+                        createAction(action);
+                        LOG.info("Created new action: {}", action.getId());
+                    }
+
+                    importedActions.add(action);
+
+                } catch (Exception e) {
+                    LOG.error("Failed to import action: {}", actionData.get("name"), e);
+                    // Continue with other actions
+                }
+            }
+
+            LOG.info("Successfully imported {} actions", importedActions.size());
+            return importedActions;
+
+        } catch (Exception e) {
+            LOG.error("Failed to import actions", e);
+            throw new Exception("Failed to import actions: " + e.getMessage(), e);
+        }
     }
 
     @Override
     public Map<String, Object> exportActions(String[] actionIds) throws Exception {
-        // TODO: Implementation for bulk export
+        LOG.info("Exporting {} AI actions", actionIds != null ? actionIds.length : "all");
         Map<String, Object> exportData = new HashMap<>();
-        return exportData;
+
+        try {
+            List<AIActionModel> actionsToExport;
+
+            if (actionIds == null || actionIds.length == 0) {
+                // Export all actions
+                actionsToExport = listActions();
+            } else {
+                // Export specific actions
+                actionsToExport = new ArrayList<>();
+                for (String actionId : actionIds) {
+                    try {
+                        AIActionModel action = getAction(actionId);
+                        actionsToExport.add(action);
+                    } catch (Exception e) {
+                        LOG.warn("Action not found for export: {}", actionId);
+                    }
+                }
+            }
+
+            // Convert actions to exportable format
+            List<Map<String, Object>> actionsData = new ArrayList<>();
+            for (AIActionModel action : actionsToExport) {
+                Map<String, Object> actionData = new HashMap<>();
+                actionData.put("id", action.getId());
+                actionData.put("name", action.getName());
+                actionData.put("description", action.getDescription());
+                actionData.put("actionType", action.getActionType());
+                actionData.put("category", action.getCategory());
+                actionData.put("targetType", action.getTargetType());
+                actionData.put("aiProvider", action.getAiProvider());
+                actionData.put("model", action.getModel());
+                actionData.put("version", action.getVersion());
+                actionData.put("status", action.getStatus());
+                actionData.put("enabled", action.getEnabled());
+                actionData.put("tags", action.getTags() != null ? Arrays.asList(action.getTags()) : Collections.emptyList());
+                actionData.put("contentTypes", action.getContentTypes() != null ? Arrays.asList(action.getContentTypes()) : Collections.emptyList());
+                actionData.put("configuration", action.getConfiguration());
+                actionData.put("promptTemplate", action.getPromptTemplate());
+                actionData.put("outputSchema", action.getOutputSchema());
+                actionsData.add(actionData);
+            }
+
+            // Build export structure
+            exportData.put("version", "1.0");
+            exportData.put("exportedAt", new Date().toString());
+            exportData.put("count", actionsToExport.size());
+            exportData.put("actions", actionsData);
+
+            LOG.info("Successfully exported {} actions", actionsToExport.size());
+            return exportData;
+
+        } catch (Exception e) {
+            LOG.error("Failed to export actions", e);
+            throw new Exception("Failed to export actions: " + e.getMessage(), e);
+        }
     }
 
     @Override

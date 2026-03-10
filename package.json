@@ -9,10 +9,17 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
     "type-check": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:update": "playwright test --update-snapshots",
+    "test:e2e:report": "playwright show-report tests/e2e/playwright-report",
+    "docs:jsdoc": "typedoc --out docs/api src"
   },
   "dependencies": {
     "@reactflow/background": "^11.3.14",
@@ -32,6 +39,7 @@
     "zustand": "^4.4.7"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4.1.18",
     "@testing-library/jest-dom": "^6.1.4",
     "@testing-library/react": "^13.4.0",
@@ -50,9 +58,11 @@
     "identity-obj-proxy": "^3.0.0",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
+    "playwright": "^1.58.2",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.18",
     "ts-jest": "^29.1.1",
+    "typedoc": "^0.25.4",
     "typescript": "^5.2.2",
     "vite": "^4.5.0"
   },

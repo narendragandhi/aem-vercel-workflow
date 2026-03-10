@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -204,10 +205,17 @@ public class WorkflowExecutionApiServlet extends SlingAllMethodsServlet {
     }
 
     private String extractExecutionId(String pathInfo) {
-        if (pathInfo == null || pathInfo.equals("/api/workflows/executions")) {
-            return null;
+        String[] segments = getPathSegments(pathInfo);
+        return segments.length > 0 ? segments[0] : null;
+    }
+
+    private String[] getPathSegments(String pathInfo) {
+        if (pathInfo == null || pathInfo.isEmpty()) {
+            return new String[0];
         }
-        return pathInfo.substring(pathInfo.lastIndexOf('/') + 1);
+        return Arrays.stream(pathInfo.split("/"))
+            .filter(segment -> !segment.isEmpty())
+            .toArray(String[]::new);
     }
 
     private void writeJsonResponse(SlingHttpServletResponse response, Object data, int statusCode) throws IOException {

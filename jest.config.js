@@ -8,7 +8,7 @@
  */
 
 /** @type {import('jest').Config} */
-const config = {
+export default {
   // Use jsdom for browser-like environment
   testEnvironment: 'jsdom',
 
@@ -88,4 +88,3 @@ const config = {
   restoreMocks: true,
 };
 
-module.exports = config;

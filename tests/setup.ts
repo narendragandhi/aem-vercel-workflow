@@ -47,6 +47,9 @@ Object.defineProperty(window, 'matchMedia', {
 // Mock scrollTo
 window.scrollTo = jest.fn();
 
+// Mock scrollIntoView (not available in jsdom)
+Element.prototype.scrollIntoView = jest.fn();
+
 // Mock URL.createObjectURL
 global.URL.createObjectURL = jest.fn(() => 'mock-url');
 global.URL.revokeObjectURL = jest.fn();

@@ -44,6 +44,11 @@ import { DAMMetadataWriteNode } from './nodes/DAMMetadataWriteNode';
 import { DAMTranscodeNode } from './nodes/DAMTranscodeNode';
 import { CallWorkflowNode } from './nodes/CallWorkflowNode';
 import { PageActivationNode } from './nodes/PageActivationNode';
+import { ConditionNode } from './nodes/ConditionNode';
+import { LoopNode } from './nodes/LoopNode';
+import { ParallelNode } from './nodes/ParallelNode';
+import { DelayNode } from './nodes/DelayNode';
+import { ErrorHandlerNode } from './nodes/ErrorHandlerNode';
 
 const nodeTypes: NodeTypes = {
   aemStep: AEMStepNode,
@@ -59,6 +64,11 @@ const nodeTypes: NodeTypes = {
   damTranscode: DAMTranscodeNode,
   callWorkflow: CallWorkflowNode,
   pageActivation: PageActivationNode,
+  condition: ConditionNode,
+  loop: LoopNode,
+  parallel: ParallelNode,
+  delay: DelayNode,
+  errorHandler: ErrorHandlerNode,
 };
 
 interface HistoryState {

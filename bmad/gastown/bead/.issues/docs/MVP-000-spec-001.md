@@ -3,7 +3,7 @@ id: MVP-000-spec-001
 workflow_id: MVP-000
 type: specification
 agent: docs
-status: in_progress
+status: completed
 priority: critical
 depends_on: []
 blocks: [MVP-000-impl-001]

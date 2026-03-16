@@ -15,7 +15,7 @@ import { Background, BackgroundVariant } from '@reactflow/background';
 import { Controls } from '@reactflow/controls';
 import { MiniMap } from '@reactflow/minimap';
 import {
-  AlertTriangle, ArrowRightCircle, BarChart3, BookOpen, CheckCircle, Clock,
+  AlertCircle, AlertTriangle, ArrowRightCircle, BarChart3, BookOpen, CheckCircle, Clock,
   Cog, Command, Download, FileText, FileUp, GitBranch, Globe,
   Grid3X3, Image, Layout, Library, Loader2, Mail,
   Moon, Play, Plus, Redo2, RotateCcw, Route,
@@ -27,6 +27,8 @@ import { WorkflowAnalytics } from './WorkflowAnalytics';
 import { CommandPalette, createDefaultCommands } from './CommandPalette';
 import { TemplateGallery } from './TemplateGallery';
 import { DocumentationGenerator } from './DocumentationGenerator';
+import { ValidationPanel } from './ValidationPanel';
+import { validateWorkflow, ValidationResult } from '../utils/validator';
 import { ADVANCED_TEMPLATES } from '../data/advancedTemplates';
 import { downloadFile, exportToAEMXML, exportToJSON, exportToMarkdown, exportToYAML, generateMermaidDiagram } from '../utils/exporters';
 import { WorkflowDefinition, WorkflowEdge, WorkflowStep } from '../types/workflow';
@@ -844,6 +846,13 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  useEffect(() => {
+    if (nodes.length > 0) {
+      const result = validateWorkflow(nodes, edges);
+      setValidationResult(result);
+    }
+  }, [nodes, edges]);
 
   // Stats computation
   const stats = useMemo(() => {
@@ -1718,6 +1727,14 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
         />
       )}
 
+      {/* Validation Panel */}
+      {showValidation && (
+        <ValidationPanel
+          result={validationResult}
+          onClose={() => setShowValidation(false)}
+        />
+      )}
+
       {/* Command Palette */}
       <CommandPalette
         isOpen={showCommandPalette}
@@ -1923,6 +1940,9 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
               </button>
               <button onClick={() => setShowAnalytics(true)} style={{...topButtonStyle, background: '#06b6d4'}} title="Analytics Dashboard">
                 <BarChart3 size={16} /> Analytics
+              </button>
+              <button onClick={() => setShowValidation(true)} style={{...topButtonStyle, background: validationResult?.valid === false ? '#ef4444' : '#22c55e'}} title="Validate Workflow">
+                <AlertTriangle size={16} /> Validate {validationResult && `(${validationResult.errorCount + validationResult.warningCount})`}
               </button>
               <button onClick={() => setShowStats(true)} style={{...topButtonStyle, background: '#64748b'}} title="Quick Stats">
                 <BarChart3 size={16} /> Stats

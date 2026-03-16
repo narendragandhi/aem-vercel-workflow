@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Handle, Position, NodeProps } from '@reactflow/core';
-import { GitBranch, Play, Settings, ArrowRightCircle } from 'lucide-react';
+import { Handle, NodeProps, Position } from '@reactflow/core';
+import { ArrowRightCircle, GitBranch, Play, Settings } from 'lucide-react';
 
 interface CallWorkflowNodeData {
   label: string;

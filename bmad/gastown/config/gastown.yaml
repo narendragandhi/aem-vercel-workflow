@@ -1,0 +1,206 @@
+# GasTown Configuration
+# Central configuration for the AI agent orchestration layer
+# Project: AEMFlow - Visual Workflow Builder for Adobe Experience Manager
+
+version: "1.0"
+name: "AEMFlow - GasTown"
+
+# Project metadata
+project:
+  name: aemflow
+  description: "Visual Workflow Builder for Adobe Experience Manager - Replaces XML workflow coding with drag-and-drop interface"
+  repository: https://github.com/yourorg/aemflow
+  domain: aemflow
+
+# Agent definitions
+agents:
+  mayor:
+    name: "Mayor AI"
+    description: "Central orchestrator for AEMFlow development workflows"
+    persona: agents/mayor.md
+    capabilities:
+      - task_decomposition
+      - agent_assignment
+      - progress_monitoring
+      - dependency_management
+      - quality_assurance
+
+  coder:
+    name: "AEMFlow Coder"
+    description: "Specialist in React/TypeScript frontend development with ReactFlow"
+    persona: agents/aemflow-coder.md
+    capabilities:
+      - react_typescript
+      - reactflow_integration
+      - zustand_state
+      - tailwind_styling
+      - aem_integration
+    tools:
+      - npm
+      - git
+      - typescript
+      - vite
+
+  tester:
+    name: "AEMFlow Test Writer"
+    description: "Specialist in React testing with Jest and Playwright"
+    persona: agents/aemflow-test-writer.md
+    capabilities:
+      - unit_testing
+      - component_testing
+      - e2e_testing
+      - tdd
+    tools:
+      - jest
+      - react_testing_library
+      - playwright
+
+  reviewer:
+    name: "AEMFlow Code Reviewer"
+    description: "Specialist in code quality and React best practices review"
+    persona: agents/aemflow-code-reviewer.md
+    capabilities:
+      - code_quality_review
+      - react_best_practices_review
+      - typescript_review
+      - performance_review
+      - accessibility_review
+
+  docs:
+    name: "AEMFlow Documentation"
+    description: "Specialist in technical documentation"
+    persona: agents/aemflow-documentation.md
+    capabilities:
+      - spec_documentation
+      - api_documentation
+      - readme_documentation
+      - claude_md_documentation
+
+# Workflow configurations
+workflows:
+  default: aemflow-feature-development
+
+  available:
+    - name: aemflow-feature-development
+      file: workflows/aemflow-feature-development.yaml
+      description: "End-to-end workflow for AEMFlow features"
+      agents: [coder, tester, reviewer, docs]
+
+    - name: spec-driven-development
+      file: workflows/spec-driven-development.yaml
+      description: "TDD workflow with specs first"
+      agents: [coder, tester, reviewer]
+
+    - name: bug-fix
+      file: workflows/bug-fix.yaml
+      description: "Streamlined workflow for bug fixes"
+      agents: [coder, tester, reviewer]
+
+# BEAD configuration
+bead:
+  issues_dir: bead/.issues
+  templates_dir: bead/templates
+
+  # Agent directories
+  agent_dirs:
+    - inbox
+    - coder
+    - tester
+    - reviewer
+    - docs
+    - blocked
+    - completed
+
+  # Issue statuses
+  statuses:
+    - pending
+    - in_progress
+    - blocked
+    - completed
+    - cancelled
+
+  # Priority levels
+  priorities:
+    - critical
+    - high
+    - medium
+    - low
+
+# Quality gates
+quality_gates:
+  compilation:
+    command: npm run build
+    required: true
+
+  lint:
+    command: npm run lint
+    required: true
+
+  type_check:
+    command: npm run type-check
+    required: true
+
+  unit_tests:
+    command: npm test
+    required: true
+
+  coverage:
+    command: npm run test:coverage
+    threshold: 60
+    required: false
+
+  e2e_tests:
+    command: npm run test:e2e
+    required: false
+
+# Timeouts (in minutes)
+timeouts:
+  phase_default: 30
+  workflow_max: 240
+  blocked_escalation: 60
+
+# Retry policy
+retry:
+  max_attempts: 2
+  backoff: exponential
+  conditions:
+    - transient_error
+    - timeout
+    - build_failure
+
+# Notifications
+notifications:
+  on_workflow_start: true
+  on_phase_complete: true
+  on_blocked: true
+  on_workflow_complete: true
+
+# Claude Code integration
+claude_code:
+  invocation_examples:
+    mayor: |
+      Please read bmad/gastown/agents/mayor.md and adopt the Mayor AI persona.
+      Orchestrate workflow {workflow_id} following the aemflow-feature-development workflow.
+
+    agent: |
+      Please read bmad/gastown/agents/{agent}.md and adopt that persona.
+      Work on issue {issue_id} from bmad/gastown/bead/.issues/{agent}/.
+
+  session_protocol:
+    start:
+      - Read your context.json file
+      - Check for pending handoffs in inbox
+      - Identify current active issues
+      - Resume or pick up new work
+    end:
+      - Update context.json with session progress
+      - Commit all changes with BEAD commit format
+      - Update issue status if needed
+
+# Paths (relative to gastown directory)
+paths:
+  agents: agents/
+  workflows: workflows/
+  bead: bead/
+  scripts: scripts/
+  config: config/

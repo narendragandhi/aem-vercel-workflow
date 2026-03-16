@@ -8,8 +8,8 @@
  */
 
 import React, { memo, useCallback } from 'react';
-import { Handle, Position, NodeProps } from '@reactflow/core';
-import { PlayCircle, CheckCircle, StopCircle } from 'lucide-react';
+import { Handle, NodeProps, Position } from '@reactflow/core';
+import { CheckCircle, PlayCircle, StopCircle } from 'lucide-react';
 
 /**
  * Data structure for Start/End Node.

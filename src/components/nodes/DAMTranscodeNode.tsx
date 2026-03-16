@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Handle, Position, NodeProps } from '@reactflow/core';
-import { Film, Settings, Layers, CheckCircle } from 'lucide-react';
+import { Handle, NodeProps, Position } from '@reactflow/core';
+import { CheckCircle, Film, Layers, Settings } from 'lucide-react';
 
 interface DAMTranscodeNodeData {
   label: string;

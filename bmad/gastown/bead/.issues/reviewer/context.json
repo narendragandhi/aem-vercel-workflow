@@ -1,0 +1,17 @@
+{
+  "version": "1.0",
+  "project": "aemflow",
+  "last_updated": "2026-03-15",
+  "active_beads": [
+    "AEMF-002-review-001",
+    "AEMF-003-review-001",
+    "AEMF-005-review-001"
+  ],
+  "completed_beads": [],
+  "statistics": {
+    "total_beads": 3,
+    "completed": 0,
+    "in_progress": 0,
+    "pending": 3
+  }
+}

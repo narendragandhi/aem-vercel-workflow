@@ -36,12 +36,12 @@ export default function LandingPage() {
 
   return (
     <ReactFlowProvider>
-      <div style={showDemo ? { height: '100vh', background: '#fff' } : {}} className={showDemo ? '' : 'landing-page'}>
+      <div style={showDemo ? { height: '100vh', width: '100vw', display: 'flex', flexDirection: 'column', background: '#fff', overflow: 'hidden' } : {}} className={showDemo ? '' : 'landing-page'}>
         {!showDemo ? (
           <>
             <nav className="landing-nav">
               <div className="landing-logo"><span>AEM</span>Flow</div>
-              <a href="https://github.com" target="_blank" className="landing-nav-link">GitHub</a>
+              <a href="https://github.com" target="_blank" className="landing-nav-link" rel="noreferrer">GitHub</a>
             </nav>
             
             <section className="landing-hero">
@@ -153,13 +153,13 @@ export default function LandingPage() {
             </footer>
           </>
         ) : (
-          <div style={{ height: '100vh' }}>
-            <button 
+          <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', flex: 1 }}>
+            <button
               onClick={() => setShowDemo(false)}
               style={{
-                position: 'absolute',
-                top: '16px',
-                left: '16px',
+                position: 'fixed',
+                top: '12px',
+                left: '12px',
                 zIndex: 1000,
                 padding: '8px 16px',
                 background: '#f1f5f9',
@@ -167,11 +167,14 @@ export default function LandingPage() {
                 borderRadius: '6px',
                 cursor: 'pointer',
                 fontWeight: '500',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
               }}
             >
               ← Back to Home
             </button>
-            <WorkflowBuilder />
+            <div style={{ flex: 1, width: '100%', height: '100%', minHeight: 0 }}>
+              <WorkflowBuilder />
+            </div>
           </div>
         )}
       </div>

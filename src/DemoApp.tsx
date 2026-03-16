@@ -14,7 +14,7 @@ export default function DemoApp() {
     
     try {
       setCurrentWorkflow(DEMO_WORKFLOWS[0]);
-      setDebug('DemoApp ready! ' + DEMO_WORKFLOWS[0].name);
+      setDebug(`DemoApp ready! ${  DEMO_WORKFLOWS[0].name}`);
     } catch (e: any) {
       setError(e.message);
     }
@@ -24,7 +24,7 @@ export default function DemoApp() {
     try {
       alert('Workflow saved successfully!');
     } catch (error) {
-      alert('Error saving workflow: ' + error);
+      alert(`Error saving workflow: ${  error}`);
     }
   };
 

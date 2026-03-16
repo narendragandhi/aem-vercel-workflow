@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Handle, Position, NodeProps } from '@reactflow/core';
-import { FileCode, Save, Settings, Database } from 'lucide-react';
+import { Handle, NodeProps, Position } from '@reactflow/core';
+import { Database, FileCode, Save, Settings } from 'lucide-react';
 
 interface DAMMetadataWriteNodeData {
   label: string;

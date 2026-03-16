@@ -1,5 +1,5 @@
 import React from 'react';
-import { Handle, Position, NodeProps } from '@reactflow/core';
+import { Handle, NodeProps, Position } from '@reactflow/core';
 import { Mail, User, Users } from 'lucide-react';
 
 interface EmailNotificationData {

@@ -1,26 +1,26 @@
-import React, { useCallback, useMemo, useState, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ReactFlow,
-  Node,
-  Edge,
   addEdge,
-  Connection,
-  useNodesState,
-  useEdgesState,
-  NodeTypes,
-  applyNodeChanges,
   applyEdgeChanges,
+  applyNodeChanges,
+  Connection,
+  Edge,
+  Node,
+  NodeTypes,
+  ReactFlow,
+  useEdgesState,
+  useNodesState,
 } from '@reactflow/core';
 import { Background, BackgroundVariant } from '@reactflow/background';
 import { Controls } from '@reactflow/controls';
 import { MiniMap } from '@reactflow/minimap';
 import {
-  Save, Download, Upload, Trash2, User, Cog,
-  Plus, GitBranch, X, Library, Mail, Image, UserCheck,
-  FileText, Globe, Route, ArrowRightCircle, Moon, Sun,
-  Undo2, Redo2, Layout, BarChart3, AlertTriangle, CheckCircle,
-  Clock, Settings, Zap, RotateCcw, FileUp, Sparkles, Send, Loader2,
-  Play, Command, BookOpen, Grid3X3
+  AlertTriangle, ArrowRightCircle, BarChart3, BookOpen, CheckCircle, Clock,
+  Cog, Command, Download, FileText, FileUp, GitBranch, Globe,
+  Grid3X3, Image, Layout, Library, Loader2, Mail,
+  Moon, Play, Plus, Redo2, RotateCcw, Route,
+  Save, Send, Settings, Sparkles, Sun, Trash2, Undo2, Upload,
+  User, UserCheck, X, Zap
 } from 'lucide-react';
 import { WorkflowSimulator } from './WorkflowSimulator';
 import { WorkflowAnalytics } from './WorkflowAnalytics';
@@ -28,8 +28,8 @@ import { CommandPalette, createDefaultCommands } from './CommandPalette';
 import { TemplateGallery } from './TemplateGallery';
 import { DocumentationGenerator } from './DocumentationGenerator';
 import { ADVANCED_TEMPLATES } from '../data/advancedTemplates';
-import { exportToAEMXML, exportToJSON, exportToYAML, exportToMarkdown, generateMermaidDiagram, downloadFile } from '../utils/exporters';
-import { WorkflowDefinition, WorkflowStep, WorkflowEdge } from '../types/workflow';
+import { downloadFile, exportToAEMXML, exportToJSON, exportToMarkdown, exportToYAML, generateMermaidDiagram } from '../utils/exporters';
+import { WorkflowDefinition, WorkflowEdge, WorkflowStep } from '../types/workflow';
 import { useWorkflowStore } from '../hooks/useWorkflowStore';
 import { AEMStepNode } from './nodes/AEMStepNode';
 import { ProcessStepNode } from './nodes/ProcessStepNode';
@@ -206,7 +206,7 @@ const validateWorkflow = (nodes: Node[], edges: Edge[]): ValidationResult => {
   }
 
   const orphanedNodes = nodes.filter(node => {
-    if (node.type === 'startEnd') return false;
+    if (node.type === 'startEnd') {return false;}
     const hasIncoming = edges.some(e => e.target === node.id);
     const hasOutgoing = edges.some(e => e.source === node.id);
     return !hasIncoming || !hasOutgoing;
@@ -250,7 +250,7 @@ const detectCycles = (nodes: Node[], edges: Edge[]): string[][] => {
   const adj: Record<string, string[]> = {};
   nodes.forEach(n => adj[n.id] = []);
   edges.forEach(e => {
-    if (adj[e.source]) adj[e.source].push(e.target);
+    if (adj[e.source]) {adj[e.source].push(e.target);}
   });
 
   const cycles: string[][] = [];
@@ -298,7 +298,7 @@ const generateAEMXML = (nodes: Node[], edges: Edge[]): string => {
 `;
 
   nodes.forEach(node => {
-    if (node.type === 'startEnd') return;
+    if (node.type === 'startEnd') {return;}
     
     xml += `    <step id="${node.id.replace(/[^a-zA-Z0-9-_]/g, '_')}"\n`;
     xml += `          title="${node.data?.label || node.id}"\n`;
@@ -447,7 +447,7 @@ const parseAEMXML = (xmlString: string): { nodes: Node[], edges: Edge[] } => {
 };
 
 const autoLayoutNodes = (nodes: Node[], edges: Edge[]): { nodes: Node[], edges: Edge[] } => {
-  if (nodes.length === 0) return { nodes, edges };
+  if (nodes.length === 0) {return { nodes, edges };}
   
   const startNodes = nodes.filter(n => n.type === 'startEnd' && n.data?.isStart);
   const endNodes = nodes.filter(n => n.type === 'startEnd' && !n.data?.isStart);
@@ -462,19 +462,19 @@ const autoLayoutNodes = (nodes: Node[], edges: Edge[]): { nodes: Node[], edges: 
   });
   
   edges.forEach(e => {
-    if (adj[e.source]) adj[e.source].push(e.target);
-    if (inDegree[e.target] !== undefined) inDegree[e.target]++;
+    if (adj[e.source]) {adj[e.source].push(e.target);}
+    if (inDegree[e.target] !== undefined) {inDegree[e.target]++;}
   });
   
   const levels: Node[][] = [];
   const visited = new Set<string>();
   
   const getLevel = (nodeId: string, level: number): number => {
-    if (visited.has(nodeId)) return level;
+    if (visited.has(nodeId)) {return level;}
     visited.add(nodeId);
     
     const parents = edges.filter(e => e.target === nodeId).map(e => e.source);
-    if (parents.length === 0) return 0;
+    if (parents.length === 0) {return 0;}
     
     let maxLevel = 0;
     parents.forEach(p => {
@@ -486,7 +486,7 @@ const autoLayoutNodes = (nodes: Node[], edges: Edge[]): { nodes: Node[], edges: 
   
   processNodes.forEach(n => {
     const level = getLevel(n.id, 0);
-    if (!levels[level]) levels[level] = [];
+    if (!levels[level]) {levels[level] = [];}
     levels[level].push(n);
   });
   
@@ -857,8 +857,8 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
     const branchCount = nodeTypes.branch || 0;
     const totalSteps = nodes.length;
     let complexity: 'Low' | 'Medium' | 'High' = 'Low';
-    if (branchCount > 3 || totalSteps > 15) complexity = 'High';
-    else if (branchCount > 1 || totalSteps > 8) complexity = 'Medium';
+    if (branchCount > 3 || totalSteps > 15) {complexity = 'High';}
+    else if (branchCount > 1 || totalSteps > 8) {complexity = 'Medium';}
 
     return {
       totalNodes: nodes.length,
@@ -972,8 +972,8 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
 
   const onConnect = useCallback(
     (params: Connection) => {
-      if (readOnly) return;
-      if (!params.source || !params.target) return;
+      if (readOnly) {return;}
+      if (!params.source || !params.target) {return;}
       
       const edgeLabel = params.sourceHandle === 'true' ? 'Yes' : params.sourceHandle === 'false' ? 'No' : undefined;
       
@@ -997,7 +997,7 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
 
   const onNodesChangeHandler = useCallback(
     (changes: any) => {
-      if (readOnly) return;
+      if (readOnly) {return;}
       onNodesChange(changes);
     },
     [readOnly, onNodesChange]
@@ -1005,7 +1005,7 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
 
   const onEdgesChangeHandler = useCallback(
     (changes: any) => {
-      if (readOnly) return;
+      if (readOnly) {return;}
       onEdgesChange(changes);
     },
     [readOnly, onEdgesChange]
@@ -1021,7 +1021,7 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
   }, []);
 
   const handleUpdateNode = useCallback(() => {
-    if (!selectedNode) return;
+    if (!selectedNode) {return;}
     
     setNodes((nds) => {
       const updated = nds.map((node) => {
@@ -1048,7 +1048,7 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
   }, [selectedNode, editLabel, editDescription, editParticipant, editTimeout, editErrorHandler, setNodes, edges, pushHistory]);
 
   const handleDeleteNode = useCallback(() => {
-    if (!selectedNode) return;
+    if (!selectedNode) {return;}
     if (selectedNode.type === 'startEnd') {
       alert('Cannot delete Start or End nodes');
       return;
@@ -1192,7 +1192,7 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
     
     if (!result.valid) {
       const proceed = window.confirm(`Validation failed with ${result.errors.length} error(s). Export anyway?`);
-      if (!proceed) return;
+      if (!proceed) {return;}
     }
     
     const xml = generateAEMXML(nodes, edges);
@@ -1229,7 +1229,7 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {return;}
     
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -1358,7 +1358,7 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
   const borderColor = darkMode ? '#334155' : '#e2e8f0';
 
   return (
-    <div style={{ width: '100%', height: '100%', display: 'flex', background: bgColor, color: textColor }}>
+    <div style={{ width: '100%', height: '100%', minHeight: '400px', display: 'flex', background: bgColor, color: textColor, overflow: 'hidden' }}>
       <input
         ref={fileInputRef}
         type="file"
@@ -1841,7 +1841,7 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
         </div>
       )}
 
-      <div style={{ flex: 1, position: 'relative' }}>
+      <div style={{ flex: 1, position: 'relative', minHeight: '400px', height: '100%' }}>
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -1851,8 +1851,19 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
           onNodeClick={handleNodeClick}
           nodeTypes={nodeTypes}
           fitView
+          fitViewOptions={{ padding: 0.2, maxZoom: 1.5 }}
+          minZoom={0.1}
+          maxZoom={2}
+          panOnScroll
+          panOnScrollSpeed={0.5}
+          zoomOnScroll
+          zoomOnPinch
+          selectNodesOnDrag={false}
+          snapToGrid
+          snapGrid={[15, 15]}
           attributionPosition="bottom-left"
-          style={{ background: bgColor }}
+          style={{ background: bgColor, width: '100%', height: '100%' }}
+          proOptions={{ hideAttribution: true }}
         >
           <Background variant={BackgroundVariant.Dots} gap={20} size={1} color={darkMode ? '#475569' : '#cbd5e1'} />
           <Controls />
@@ -1875,15 +1886,18 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
           />
           
           {!readOnly && (
-            <div style={{ 
-              position: 'absolute', 
-              top: 10, 
-              right: 10, 
-              zIndex: 10, 
-              display: 'flex', 
-              gap: '6px',
+            <div style={{
+              position: 'absolute',
+              top: 10,
+              right: 10,
+              left: 10,
+              zIndex: 10,
+              display: 'flex',
+              gap: '4px',
               flexWrap: 'wrap',
               justifyContent: 'flex-end',
+              maxWidth: 'calc(100% - 20px)',
+              pointerEvents: 'none',
             }}>
               <button onClick={undo} style={{...topButtonStyle, background: darkMode ? '#475569' : '#64748b'}} title="Undo (Ctrl+Z)">
                 <Undo2 size={16} />
@@ -2009,16 +2023,21 @@ const buttonStyle = {
   fontSize: '13px',
 };
 
-const topButtonStyle = {
+const topButtonStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: '6px',
-  padding: '8px 12px',
+  gap: '4px',
+  padding: '6px 10px',
   color: 'white',
   border: 'none',
   borderRadius: '6px',
   cursor: 'pointer',
-  fontSize: '13px',
+  fontSize: '12px',
+  fontWeight: 500,
+  pointerEvents: 'auto',
+  whiteSpace: 'nowrap',
+  boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+  transition: 'transform 0.1s, box-shadow 0.1s',
 };
 
 const darkTheme = {

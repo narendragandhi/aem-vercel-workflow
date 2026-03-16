@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Handle, Position, NodeProps } from '@reactflow/core';
-import { Route, Users, ArrowRight, Settings } from 'lucide-react';
+import { Handle, NodeProps, Position } from '@reactflow/core';
+import { ArrowRight, Route, Settings, Users } from 'lucide-react';
 
 interface GraniteRoutingNodeData {
   label: string;

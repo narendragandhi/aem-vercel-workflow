@@ -8,7 +8,7 @@
  */
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { AlertTriangle, RefreshCw, Home, Bug } from 'lucide-react';
+import { AlertTriangle, Bug, Home, RefreshCw } from 'lucide-react';
 
 /**
  * Props for the ErrorBoundary component.

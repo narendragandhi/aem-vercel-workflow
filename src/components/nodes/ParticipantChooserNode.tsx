@@ -1,6 +1,6 @@
 import React from 'react';
-import { Handle, Position, NodeProps } from '@reactflow/core';
-import { UserCheck, Users, UserPlus } from 'lucide-react';
+import { Handle, NodeProps, Position } from '@reactflow/core';
+import { UserCheck, UserPlus, Users } from 'lucide-react';
 
 interface ParticipantChooserData {
   label: string;

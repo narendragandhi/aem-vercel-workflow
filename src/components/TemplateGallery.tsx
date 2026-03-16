@@ -9,13 +9,13 @@
  * - Tag-based filtering
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
-  Search, X, Library, FileText, Image, FormInput, Plug, Shield,
-  Target, ShoppingCart, Filter, Layers, Clock, GitBranch,
-  ChevronRight, Star, Zap, CheckCircle
+  CheckCircle, ChevronRight, Clock, FileText, Filter, FormInput, GitBranch, Image,
+  Layers, Library, Plug, Search, Shield, ShoppingCart,
+  Star, Target, X, Zap
 } from 'lucide-react';
-import { ADVANCED_TEMPLATES, WorkflowTemplate, getCategories, getAllTags } from '../data/advancedTemplates';
+import { ADVANCED_TEMPLATES, getAllTags, getCategories, WorkflowTemplate } from '../data/advancedTemplates';
 
 interface TemplateGalleryProps {
   isOpen: boolean;
@@ -75,7 +75,7 @@ export const TemplateGallery: React.FC<TemplateGalleryProps> = ({
           template.name.toLowerCase().includes(searchLower) ||
           template.description.toLowerCase().includes(searchLower) ||
           template.tags.some(tag => tag.includes(searchLower));
-        if (!matchesSearch) return false;
+        if (!matchesSearch) {return false;}
       }
 
       // Category filter
@@ -91,7 +91,7 @@ export const TemplateGallery: React.FC<TemplateGalleryProps> = ({
       // Tags filter
       if (selectedTags.length > 0) {
         const hasAllTags = selectedTags.every(tag => template.tags.includes(tag));
-        if (!hasAllTags) return false;
+        if (!hasAllTags) {return false;}
       }
 
       return true;
@@ -115,7 +115,7 @@ export const TemplateGallery: React.FC<TemplateGalleryProps> = ({
 
   const hasFilters = search || selectedCategory || selectedComplexity || selectedTags.length > 0;
 
-  if (!isOpen) return null;
+  if (!isOpen) {return null;}
 
   const bgColor = darkMode ? '#1e293b' : 'white';
   const textColor = darkMode ? '#e2e8f0' : '#1e293b';

@@ -1,4 +1,4 @@
-import { renderHook, act } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import { useWorkflowStore } from '../useWorkflowStore';
 import { WorkflowDefinition } from '@/types/workflow';
 
@@ -15,9 +15,18 @@ const mockWorkflow: WorkflowDefinition = {
 
 describe('useWorkflowStore', () => {
   beforeEach(() => {
-    // Clear store state by creating a fresh store for each test
-    const { unmount } = renderHook(() => useWorkflowStore());
-    unmount();
+    // Reset the store state manually since zustand stores are singletons
+    const { result } = renderHook(() => useWorkflowStore());
+    act(() => {
+      // Clear workflows manually
+      const currentWorkflows = result.current.workflows;
+      currentWorkflows.forEach(w => {
+        result.current.removeWorkflow(w.id);
+      });
+      result.current.setCurrentWorkflow(null);
+      result.current.clearError();
+      result.current.setLoading(false);
+    });
   });
 
   it('initializes with default state', () => {

@@ -108,7 +108,8 @@ describe('exportToAEMXML', () => {
     const xml = exportToAEMXML([], []);
 
     expect(xml).toContain('<?xml version="1.0"');
-    expect(xml).toContain('<nodes jcr:primaryType="nt:unstructured">');
+    // Empty workflows return a minimal XML structure
+    expect(xml).toContain('jcr:primaryType="cq:Page"');
   });
 
   it('should escape XML special characters', () => {

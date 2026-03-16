@@ -9,12 +9,12 @@
  * - Mock data generation
  */
 
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { Node, Edge } from '@reactflow/core';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Edge, Node } from '@reactflow/core';
 import {
-  Play, Pause, SkipForward, RotateCcw, X, ChevronRight,
-  CheckCircle, AlertCircle, Clock, User, Zap, GitBranch,
-  MessageSquare, Activity, Database, Settings, FastForward
+  Activity, AlertCircle, CheckCircle, ChevronRight, Clock, Database,
+  FastForward, GitBranch, MessageSquare, Pause, Play, RotateCcw,
+  Settings, SkipForward, User, X, Zap
 } from 'lucide-react';
 
 export interface SimulationStep {
@@ -104,7 +104,7 @@ export const WorkflowSimulator: React.FC<WorkflowSimulatorProps> = ({
   // Build execution plan from nodes and edges
   const buildExecutionPlan = useCallback(() => {
     const startNode = nodes.find(n => n.type === 'startEnd' && n.data?.isStart);
-    if (!startNode) return [];
+    if (!startNode) {return [];}
 
     const plan: SimulationStep[] = [];
     const visited = new Set<string>();
@@ -112,11 +112,11 @@ export const WorkflowSimulator: React.FC<WorkflowSimulatorProps> = ({
 
     while (queue.length > 0) {
       const nodeId = queue.shift()!;
-      if (visited.has(nodeId)) continue;
+      if (visited.has(nodeId)) {continue;}
       visited.add(nodeId);
 
       const node = nodes.find(n => n.id === nodeId);
-      if (!node) continue;
+      if (!node) {continue;}
 
       plan.push({
         id: `step-${plan.length}`,
@@ -179,7 +179,7 @@ export const WorkflowSimulator: React.FC<WorkflowSimulatorProps> = ({
 
     const step = steps[stepIndex];
     const node = nodes.find(n => n.id === step.nodeId);
-    if (!node) return;
+    if (!node) {return;}
 
     // Update step status to active
     setSteps(prev => prev.map((s, i) =>
@@ -253,7 +253,7 @@ export const WorkflowSimulator: React.FC<WorkflowSimulatorProps> = ({
   // Handle branch decision
   const handleDecision = useCallback((decision: 'true' | 'false') => {
     const currentStep = steps[currentStepIndex];
-    if (!currentStep || !awaitingDecision) return;
+    if (!currentStep || !awaitingDecision) {return;}
 
     // Update step with decision
     setSteps(prev => prev.map((s, i) =>
@@ -305,7 +305,7 @@ export const WorkflowSimulator: React.FC<WorkflowSimulatorProps> = ({
 
   // Pause/Resume
   const togglePause = useCallback(() => {
-    if (awaitingDecision) return; // Can't pause while awaiting decision
+    if (awaitingDecision) {return;} // Can't pause while awaiting decision
     setIsPaused(!isPaused);
     if (isPaused && isRunning) {
       executeStep(currentStepIndex + 1);

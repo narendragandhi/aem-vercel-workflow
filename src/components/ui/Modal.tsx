@@ -7,7 +7,7 @@
  * @module components/ui/Modal
  */
 
-import React, { useEffect, useRef, useCallback, memo } from 'react';
+import React, { memo, useCallback, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { createPortal } from 'react-dom';
 
@@ -63,7 +63,7 @@ function useFocusTrap(isActive: boolean) {
   const previousFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    if (!isActive) return;
+    if (!isActive) {return;}
 
     // Store currently focused element
     previousFocusRef.current = document.activeElement as HTMLElement;
@@ -86,13 +86,13 @@ function useFocusTrap(isActive: boolean) {
   }, [isActive]);
 
   const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
-    if (event.key !== 'Tab') return;
+    if (event.key !== 'Tab') {return;}
 
     const container = containerRef.current;
-    if (!container) return;
+    if (!container) {return;}
 
     const focusableElements = getFocusableElements(container);
-    if (focusableElements.length === 0) return;
+    if (focusableElements.length === 0) {return;}
 
     const firstElement = focusableElements[0] as HTMLElement;
     const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
@@ -162,7 +162,7 @@ export const Modal: React.FC<ModalProps> = memo(({
 
   // Handle Escape key
   useEffect(() => {
-    if (!isOpen || !closeOnEscape) return;
+    if (!isOpen || !closeOnEscape) {return;}
 
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -193,7 +193,7 @@ export const Modal: React.FC<ModalProps> = memo(({
     }
   }, [closeOnBackdrop, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen) {return null;}
 
   const modalContent = (
     <div

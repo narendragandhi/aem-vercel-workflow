@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Handle, Position, NodeProps } from '@reactflow/core';
-import { Globe, UploadCloud, Settings, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Handle, NodeProps, Position } from '@reactflow/core';
+import { AlertTriangle, CheckCircle, Globe, Settings, UploadCloud } from 'lucide-react';
 
 interface PageActivationNodeData {
   label: string;

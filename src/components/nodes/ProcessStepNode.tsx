@@ -8,8 +8,8 @@
  */
 
 import React, { memo, useCallback, useState } from 'react';
-import { Handle, Position, NodeProps } from '@reactflow/core';
-import { Cog, Play, Terminal, Hand, ChevronDown, ChevronUp } from 'lucide-react';
+import { Handle, NodeProps, Position } from '@reactflow/core';
+import { ChevronDown, ChevronUp, Cog, Hand, Play, Terminal } from 'lucide-react';
 
 /**
  * Data structure for Process Step Node.

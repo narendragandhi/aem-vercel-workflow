@@ -8,14 +8,14 @@
  * - Categorized actions
  */
 
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Search, X, Command, Plus, Download, Upload, Save, Trash2,
-  Layout, Undo2, Redo2, Play, BarChart3, Library, Sparkles,
-  Moon, Sun, Settings, FileText, Copy, Clipboard, Eye, EyeOff,
-  ZoomIn, ZoomOut, Maximize2, HelpCircle, Keyboard, GitBranch,
-  Mail, Image, User, Cog, Globe, ArrowRightCircle, FileUp,
-  CheckCircle, AlertTriangle, RotateCcw
+  AlertTriangle, ArrowRightCircle, BarChart3, CheckCircle, Clipboard, Cog, Command, Copy,
+  Download, Eye, EyeOff, FileText, FileUp, GitBranch, Globe,
+  HelpCircle, Image, Keyboard, Layout, Library, Mail, Maximize2, Moon,
+  Play, Plus, Redo2, RotateCcw, Save, Search,
+  Settings, Sparkles, Sun, Trash2, Undo2, Upload, User,
+  X, ZoomIn, ZoomOut
 } from 'lucide-react';
 
 export interface CommandAction {
@@ -73,8 +73,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         // Prioritize matches at the start of the label
         const aStartsWith = a.label.toLowerCase().startsWith(searchLower);
         const bStartsWith = b.label.toLowerCase().startsWith(searchLower);
-        if (aStartsWith && !bStartsWith) return -1;
-        if (!aStartsWith && bStartsWith) return 1;
+        if (aStartsWith && !bStartsWith) {return -1;}
+        if (!aStartsWith && bStartsWith) {return 1;}
         return 0;
       });
   }, [commands, search, recentCommands]);
@@ -130,7 +130,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     onClose();
   }, [onClose, onCommandExecuted]);
 
-  if (!isOpen) return null;
+  if (!isOpen) {return null;}
 
   const bgColor = darkMode ? '#1e293b' : 'white';
   const textColor = darkMode ? '#e2e8f0' : '#1e293b';
@@ -355,7 +355,7 @@ export const KeyboardShortcuts: React.FC<KeyboardShortcutsProps> = ({
   onClose,
   darkMode = false,
 }) => {
-  if (!isOpen) return null;
+  if (!isOpen) {return null;}
 
   const shortcuts = [
     { category: 'General', items: [

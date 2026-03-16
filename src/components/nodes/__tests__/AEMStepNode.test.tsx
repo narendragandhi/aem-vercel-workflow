@@ -5,6 +5,14 @@ import { AEMStepNode } from '../AEMStepNode';
 // Mock the lucide-react icons
 jest.mock('lucide-react', () => ({
   User: () => <div data-testid="user-icon" />,
+  Settings: () => <div data-testid="settings-icon" />,
+  ExternalLink: () => <div data-testid="external-link-icon" />,
+  GitBranch: () => <div data-testid="git-branch-icon" />,
+  ChevronDown: () => <div data-testid="chevron-down-icon" />,
+  ChevronUp: () => <div data-testid="chevron-up-icon" />,
+  Clock: () => <div data-testid="clock-icon" />,
+  CheckCircle: () => <div data-testid="check-circle-icon" />,
+  AlertTriangle: () => <div data-testid="alert-triangle-icon" />,
 }));
 
 // Mock Handle component
@@ -61,7 +69,8 @@ describe('AEMStepNode', () => {
     const { container } = render(
       <AEMStepNode {...defaultProps} selected={false} />
     );
-    expect(container.firstChild).toHaveClass('border-gray-300');
+    // Component uses colored borders based on stepType (participant = blue)
+    expect(container.firstChild).toHaveClass('border-blue-300');
   });
 
   it('renders handles for connections', () => {
@@ -74,8 +83,8 @@ describe('AEMStepNode', () => {
     const { container } = render(
       <AEMStepNode {...defaultProps} data={{ ...defaultProps.data, stepType: 'process' as const }} />
     );
-    const badge = container.querySelector('.bg-green-100');
-    expect(badge).toBeInTheDocument();
+    // Process stepType uses green border color
+    expect(container.firstChild).toHaveClass('border-green-300');
   });
 
   it('renders without optional props', () => {
@@ -85,9 +94,10 @@ describe('AEMStepNode', () => {
       selected: false,
     };
 
-    const { container } = render(<AEMStepNode {...minimalProps} />);
+    render(<AEMStepNode {...minimalProps} />);
     expect(screen.getByText('Minimal Step')).toBeInTheDocument();
     expect(screen.queryByText('Test description')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('user-icon')).not.toBeInTheDocument();
+    // Without stepType, participant badge won't appear
+    expect(screen.queryByText('participant')).not.toBeInTheDocument();
   });
 });

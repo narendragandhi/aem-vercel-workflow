@@ -9,14 +9,14 @@
  * - Printable format
  */
 
-import React, { useState, useMemo, useRef } from 'react';
-import { Node, Edge } from '@reactflow/core';
+import React, { useMemo, useRef, useState } from 'react';
+import { Edge, Node } from '@reactflow/core';
 import {
-  FileText, Download, Copy, Printer, X, Eye, Code,
-  Users, GitBranch, Clock, Mail, Settings, CheckCircle,
-  ChevronDown, ChevronRight, Layers
+  CheckCircle, ChevronDown, ChevronRight, Clock, Code, Copy, Download,
+  Eye, FileText, GitBranch, Layers, Mail, Printer,
+  Settings, Users, X
 } from 'lucide-react';
-import { exportToMarkdown, generateMermaidDiagram, downloadFile } from '../utils/exporters';
+import { downloadFile, exportToMarkdown, generateMermaidDiagram } from '../utils/exporters';
 
 interface DocumentationGeneratorProps {
   isOpen: boolean;
@@ -56,7 +56,7 @@ export const DocumentationGenerator: React.FC<DocumentationGeneratorProps> = ({
     // Collect unique participants
     const participants = new Set<string>();
     nodes.forEach(n => {
-      if (n.data?.participant) participants.add(n.data.participant);
+      if (n.data?.participant) {participants.add(n.data.participant);}
     });
 
     return {
@@ -91,10 +91,10 @@ export const DocumentationGenerator: React.FC<DocumentationGeneratorProps> = ({
     const visited = new Set<string>();
     const startNode = nodes.find(n => n.type === 'startEnd' && n.data?.isStart);
 
-    if (!startNode) return sequence;
+    if (!startNode) {return sequence;}
 
     const traverse = (nodeId: string) => {
-      if (visited.has(nodeId)) return;
+      if (visited.has(nodeId)) {return;}
       visited.add(nodeId);
 
       const node = nodes.find(n => n.id === nodeId);
@@ -187,7 +187,7 @@ export const DocumentationGenerator: React.FC<DocumentationGeneratorProps> = ({
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen) {return null;}
 
   const bgColor = darkMode ? '#1e293b' : 'white';
   const textColor = darkMode ? '#e2e8f0' : '#1e293b';

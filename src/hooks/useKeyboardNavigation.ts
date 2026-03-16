@@ -117,7 +117,7 @@ export function useKeyboardNavigation(
   const getNextIndex = useCallback(
     (currentIndex: number, direction: NavigationDirection): number => {
       const total = items.length;
-      if (total === 0) return -1;
+      if (total === 0) {return -1;}
 
       let nextIndex: number;
 
@@ -163,7 +163,7 @@ export function useKeyboardNavigation(
             const nextCol = col - 1;
             if (nextCol < 0) {
               nextIndex = loop ? row * columns + columns - 1 : currentIndex;
-              if (nextIndex >= total) nextIndex = total - 1;
+              if (nextIndex >= total) {nextIndex = total - 1;}
             } else {
               nextIndex = row * columns + nextCol;
             }
@@ -189,7 +189,7 @@ export function useKeyboardNavigation(
    */
   const moveFocus = useCallback(
     (direction: NavigationDirection) => {
-      if (!enabled || items.length === 0) return;
+      if (!enabled || items.length === 0) {return;}
 
       const nextIndex = getNextIndex(focusedIndex, direction);
       if (nextIndex !== focusedIndex) {
@@ -209,7 +209,7 @@ export function useKeyboardNavigation(
    */
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
-      if (!enabled) return;
+      if (!enabled) {return;}
 
       const key = event.key;
       let handled = false;
@@ -374,11 +374,11 @@ export function useRovingTabIndex<T extends HTMLElement = HTMLElement>(
 
       if (event.key === prevKey) {
         newIndex = index - 1;
-        if (newIndex < 0) newIndex = loop ? itemCount - 1 : 0;
+        if (newIndex < 0) {newIndex = loop ? itemCount - 1 : 0;}
         event.preventDefault();
       } else if (event.key === nextKey) {
         newIndex = index + 1;
-        if (newIndex >= itemCount) newIndex = loop ? 0 : itemCount - 1;
+        if (newIndex >= itemCount) {newIndex = loop ? 0 : itemCount - 1;}
         event.preventDefault();
       } else if (event.key === 'Home') {
         newIndex = 0;
@@ -433,7 +433,7 @@ export function useFocusManager(containerRef: React.RefObject<HTMLElement>) {
    * Gets all focusable elements in the container.
    */
   const getFocusableElements = useCallback((): HTMLElement[] => {
-    if (!containerRef.current) return [];
+    if (!containerRef.current) {return [];}
 
     const selector = [
       'button:not([disabled])',
@@ -483,10 +483,10 @@ export function useFocusManager(containerRef: React.RefObject<HTMLElement>) {
    */
   const trapFocus = useCallback(
     (event: KeyboardEvent) => {
-      if (event.key !== 'Tab') return;
+      if (event.key !== 'Tab') {return;}
 
       const elements = getFocusableElements();
-      if (elements.length === 0) return;
+      if (elements.length === 0) {return;}
 
       const firstElement = elements[0];
       const lastElement = elements[elements.length - 1];

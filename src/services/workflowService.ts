@@ -17,7 +17,7 @@ class WorkflowService {
       const response = await fetch(`${AEM_BASE_URL}${AEM_API_PATH}/definitions.json`, {
         headers: this.getAuthHeaders()
       });
-      if (!response.ok) throw new Error('Failed to fetch workflows');
+      if (!response.ok) {throw new Error('Failed to fetch workflows');}
       return await response.json();
     } catch (error) {
       console.error('Error fetching workflows:', error);
@@ -30,7 +30,7 @@ class WorkflowService {
       const response = await fetch(`${AEM_BASE_URL}${AEM_API_PATH}/definitions/${id}.json`, {
         headers: this.getAuthHeaders()
       });
-      if (!response.ok) throw new Error('Failed to fetch workflow');
+      if (!response.ok) {throw new Error('Failed to fetch workflow');}
       return await response.json();
     } catch (error) {
       console.error('Error fetching workflow:', error);
@@ -45,7 +45,7 @@ class WorkflowService {
         headers: this.getAuthHeaders(),
         body: JSON.stringify(workflow)
       });
-      if (!response.ok) throw new Error('Failed to save workflow');
+      if (!response.ok) {throw new Error('Failed to save workflow');}
       return await response.json();
     } catch (error) {
       console.error('Error saving workflow:', error);
@@ -59,7 +59,7 @@ class WorkflowService {
         method: 'DELETE',
         headers: this.getAuthHeaders()
       });
-      if (!response.ok) throw new Error('Failed to delete workflow');
+      if (!response.ok) {throw new Error('Failed to delete workflow');}
     } catch (error) {
       console.error('Error deleting workflow:', error);
       throw error;
@@ -76,7 +76,7 @@ class WorkflowService {
           variables
         })
       });
-      if (!response.ok) throw new Error('Failed to execute workflow');
+      if (!response.ok) {throw new Error('Failed to execute workflow');}
       return await response.json();
     } catch (error) {
       console.error('Error executing workflow:', error);
@@ -93,7 +93,7 @@ class WorkflowService {
       const response = await fetch(url, {
         headers: this.getAuthHeaders()
       });
-      if (!response.ok) throw new Error('Failed to fetch executions');
+      if (!response.ok) {throw new Error('Failed to fetch executions');}
       return await response.json();
     } catch (error) {
       console.error('Error fetching executions:', error);
@@ -106,7 +106,7 @@ class WorkflowService {
       const response = await fetch(`${AEM_BASE_URL}${AEM_API_PATH}/executions/${id}.json`, {
         headers: this.getAuthHeaders()
       });
-      if (!response.ok) throw new Error('Failed to fetch execution');
+      if (!response.ok) {throw new Error('Failed to fetch execution');}
       return await response.json();
     } catch (error) {
       console.error('Error fetching execution:', error);
@@ -119,7 +119,7 @@ class WorkflowService {
       const response = await fetch(`${AEM_BASE_URL}${AEM_API_PATH}/aem-steps.json`, {
         headers: this.getAuthHeaders()
       });
-      if (!response.ok) throw new Error('Failed to fetch AEM workflow steps');
+      if (!response.ok) {throw new Error('Failed to fetch AEM workflow steps');}
       return await response.json();
     } catch (error) {
       console.error('Error fetching AEM workflow steps:', error);

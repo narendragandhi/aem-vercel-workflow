@@ -7,9 +7,9 @@
  * @module components/nodes/AEMStepNode
  */
 
-import React, { useState, useCallback, memo } from 'react';
-import { Handle, Position, NodeProps } from '@reactflow/core';
-import { User, Settings, Clock, AlertTriangle, CheckCircle, GitBranch, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
+import React, { memo, useCallback, useState } from 'react';
+import { Handle, NodeProps, Position } from '@reactflow/core';
+import { AlertTriangle, CheckCircle, ChevronDown, ChevronUp, Clock, ExternalLink, GitBranch, Settings, User } from 'lucide-react';
 
 /**
  * Data structure for AEM Step Node.

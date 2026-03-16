@@ -1,6 +1,6 @@
 import React from 'react';
-import { Handle, Position, NodeProps } from '@reactflow/core';
-import { Image, Video, FileText, Download } from 'lucide-react';
+import { Handle, NodeProps, Position } from '@reactflow/core';
+import { Download, FileText, Image, Video } from 'lucide-react';
 
 interface DAMUpdateAssetData {
   label: string;

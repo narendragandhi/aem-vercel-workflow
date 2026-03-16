@@ -1,6 +1,6 @@
 import React from 'react';
-import { Handle, Position, NodeProps } from '@reactflow/core';
-import { GitBranch, XCircle, CheckCircle } from 'lucide-react';
+import { Handle, NodeProps, Position } from '@reactflow/core';
+import { CheckCircle, GitBranch, XCircle } from 'lucide-react';
 
 interface BranchNodeData {
   label: string;

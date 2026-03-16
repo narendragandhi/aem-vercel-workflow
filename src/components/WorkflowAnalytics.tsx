@@ -9,11 +9,11 @@
  */
 
 import React, { useMemo } from 'react';
-import { Node, Edge } from '@reactflow/core';
+import { Edge, Node } from '@reactflow/core';
 import {
-  BarChart3, GitBranch, Users, Zap, Clock, AlertTriangle,
-  CheckCircle, TrendingUp, Activity, Target, Shield, X,
-  Lightbulb, ArrowRight, Layers, Network, Timer, FileText
+  Activity, AlertTriangle, ArrowRight, BarChart3, CheckCircle, Clock,
+  FileText, GitBranch, Layers, Lightbulb, Network, Shield,
+  Target, Timer, TrendingUp, Users, X, Zap
 } from 'lucide-react';
 
 interface WorkflowAnalyticsProps {
@@ -80,10 +80,10 @@ export const WorkflowAnalytics: React.FC<WorkflowAnalyticsProps> = ({
       let maxDepth = 0;
       const visited = new Set<string>();
       const startNode = nodes.find(n => n.type === 'startEnd' && n.data?.isStart);
-      if (!startNode) return 0;
+      if (!startNode) {return 0;}
 
       const dfs = (nodeId: string, depth: number, branchDepth: number) => {
-        if (visited.has(nodeId)) return;
+        if (visited.has(nodeId)) {return;}
         visited.add(nodeId);
 
         const node = nodes.find(n => n.id === nodeId);
@@ -124,7 +124,7 @@ export const WorkflowAnalytics: React.FC<WorkflowAnalyticsProps> = ({
     const allPaths: string[][] = [];
 
     const findPaths = (nodeId: string, path: string[], visited: Set<string>) => {
-      if (visited.has(nodeId)) return;
+      if (visited.has(nodeId)) {return;}
       visited.add(nodeId);
       path.push(nodeId);
 
@@ -170,23 +170,23 @@ export const WorkflowAnalytics: React.FC<WorkflowAnalyticsProps> = ({
     const orphanCount = nodes.filter(n =>
       n.type !== 'startEnd' && !connectedNodes.has(n.id)
     ).length;
-    if (orphanCount > 0) score -= orphanCount * 10;
+    if (orphanCount > 0) {score -= orphanCount * 10;}
 
     // Check for missing participants
     const unassignedParticipants = nodes.filter(n =>
       (n.type === 'aemStep' || n.type === 'participantChooser') && !n.data?.participant
     ).length;
-    if (unassignedParticipants > 0) score -= unassignedParticipants * 5;
+    if (unassignedParticipants > 0) {score -= unassignedParticipants * 5;}
 
     // Check complexity
-    if (complexityMetrics.cyclomaticComplexity > 10) score -= 15;
-    else if (complexityMetrics.cyclomaticComplexity > 5) score -= 5;
+    if (complexityMetrics.cyclomaticComplexity > 10) {score -= 15;}
+    else if (complexityMetrics.cyclomaticComplexity > 5) {score -= 5;}
 
     // Check branch paths
     const branchNodes = nodes.filter(n => n.type === 'branch');
     branchNodes.forEach(branch => {
       const outgoing = edges.filter(e => e.source === branch.id);
-      if (outgoing.length < 2) score -= 10;
+      if (outgoing.length < 2) {score -= 10;}
     });
 
     score = Math.max(0, Math.min(100, score));
@@ -303,8 +303,8 @@ export const WorkflowAnalytics: React.FC<WorkflowAnalyticsProps> = ({
       }
     });
 
-    if (totalMinutes < 60) return `${totalMinutes} minutes`;
-    if (totalMinutes < 1440) return `${Math.round(totalMinutes / 60)} hours`;
+    if (totalMinutes < 60) {return `${totalMinutes} minutes`;}
+    if (totalMinutes < 1440) {return `${Math.round(totalMinutes / 60)} hours`;}
     return `${Math.round(totalMinutes / 1440)} days`;
   }, [nodes]);
 

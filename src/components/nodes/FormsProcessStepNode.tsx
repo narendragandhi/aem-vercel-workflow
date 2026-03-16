@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Handle, Position, NodeProps } from '@reactflow/core';
-import { FileText, Save, CheckCircle, AlertCircle, Settings } from 'lucide-react';
+import { Handle, NodeProps, Position } from '@reactflow/core';
+import { AlertCircle, CheckCircle, FileText, Save, Settings } from 'lucide-react';
 
 interface FormsProcessStepNodeData {
   label: string;

@@ -1,4 +1,6 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -453,12 +455,81 @@ button:hover {
   .landing-hero h1 {
     font-size: 2.5rem;
   }
-  
+
   .landing-nav {
     padding: 1rem 1.5rem;
   }
-  
+
   .landing-cta {
     flex-direction: column;
+  }
+}
+
+/* ReactFlow Canvas Improvements */
+.react-flow {
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+}
+
+.react-flow__renderer {
+  width: 100%;
+  height: 100%;
+}
+
+.react-flow__viewport {
+  transition: transform 0.15s ease-out;
+}
+
+.react-flow__node {
+  transition: box-shadow 0.15s ease;
+}
+
+.react-flow__node:hover {
+  z-index: 10 !important;
+}
+
+.react-flow__node.selected {
+  z-index: 20 !important;
+}
+
+.react-flow__edge-path {
+  stroke-width: 2;
+  transition: stroke 0.15s ease;
+}
+
+.react-flow__edge:hover .react-flow__edge-path {
+  stroke-width: 3;
+}
+
+.react-flow__controls {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.react-flow__controls-button {
+  border: none !important;
+  width: 28px;
+  height: 28px;
+}
+
+.react-flow__minimap {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+/* Responsive workflow builder */
+@media (max-width: 1024px) {
+  .react-flow__minimap {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .react-flow__controls {
+    transform: scale(0.85);
+    transform-origin: bottom left;
   }
 }

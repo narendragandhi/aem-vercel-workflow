@@ -1,17 +1,17 @@
 import { 
   AIAction, 
-  AIActionExecution, 
-  AIActionStats, 
+  AIActionCloneRequest, 
+  AIActionConfig, 
+  AIActionCreateRequest,
+  AIActionExecution,
+  AIActionExecutionListResponse,
+  AIActionListResponse,
   AIActionRequest,
   AIActionResponse,
-  AIActionListResponse,
-  AIActionExecutionListResponse,
   AIActionSearchRequest,
-  AIActionCreateRequest,
-  AIActionUpdateRequest,
+  AIActionStats,
   AIActionTestRequest,
-  AIActionCloneRequest,
-  AIActionConfig
+  AIActionUpdateRequest
 } from '@/types/ai-actions';
 
 class AIActionService {
@@ -30,14 +30,14 @@ class AIActionService {
   }): Promise<AIAction[]> {
     try {
       const queryParams = new URLSearchParams();
-      if (params?.category) queryParams.append('category', params.category);
-      if (params?.contentType) queryParams.append('contentType', params.contentType);
-      if (params?.enabled !== undefined) queryParams.append('enabled', params.enabled.toString());
-      if (params?.limit) queryParams.append('limit', params.limit.toString());
-      if (params?.offset) queryParams.append('offset', params.offset.toString());
+      if (params?.category) {queryParams.append('category', params.category);}
+      if (params?.contentType) {queryParams.append('contentType', params.contentType);}
+      if (params?.enabled !== undefined) {queryParams.append('enabled', params.enabled.toString());}
+      if (params?.limit) {queryParams.append('limit', params.limit.toString());}
+      if (params?.offset) {queryParams.append('offset', params.offset.toString());}
 
       const response = await fetch(`${this.baseUrl}?${queryParams}`);
-      if (!response.ok) throw new Error('Failed to fetch AI actions');
+      if (!response.ok) {throw new Error('Failed to fetch AI actions');}
 
       const data: AIActionListResponse = await response.json();
       return data.actions;
@@ -53,7 +53,7 @@ class AIActionService {
   async getAction(actionId: string): Promise<AIAction> {
     try {
       const response = await fetch(`${this.baseUrl}/${actionId}`);
-      if (!response.ok) throw new Error('Failed to fetch AI action');
+      if (!response.ok) {throw new Error('Failed to fetch AI action');}
 
       const data = await response.json();
       return data.action;
@@ -76,7 +76,7 @@ class AIActionService {
         body: JSON.stringify(actionData),
       });
       
-      if (!response.ok) throw new Error('Failed to create AI action');
+      if (!response.ok) {throw new Error('Failed to create AI action');}
 
       const data = await response.json();
       return data.action;
@@ -99,7 +99,7 @@ class AIActionService {
         body: JSON.stringify(actionData),
       });
       
-      if (!response.ok) throw new Error('Failed to update AI action');
+      if (!response.ok) {throw new Error('Failed to update AI action');}
 
       const data = await response.json();
       return data.action;
@@ -118,7 +118,7 @@ class AIActionService {
         method: 'DELETE',
       });
       
-      if (!response.ok) throw new Error('Failed to delete AI action');
+      if (!response.ok) {throw new Error('Failed to delete AI action');}
     } catch (error) {
       console.error('Error deleting AI action:', error);
       throw error;
@@ -132,14 +132,14 @@ class AIActionService {
     try {
       const queryParams = new URLSearchParams();
       queryParams.append('q', searchParams.query);
-      if (searchParams.category) queryParams.append('category', searchParams.category);
-      if (searchParams.actionType) queryParams.append('actionType', searchParams.actionType);
-      if (searchParams.enabled !== undefined) queryParams.append('enabled', searchParams.enabled.toString());
-      if (searchParams.limit) queryParams.append('limit', searchParams.limit.toString());
-      if (searchParams.offset) queryParams.append('offset', searchParams.offset.toString());
+      if (searchParams.category) {queryParams.append('category', searchParams.category);}
+      if (searchParams.actionType) {queryParams.append('actionType', searchParams.actionType);}
+      if (searchParams.enabled !== undefined) {queryParams.append('enabled', searchParams.enabled.toString());}
+      if (searchParams.limit) {queryParams.append('limit', searchParams.limit.toString());}
+      if (searchParams.offset) {queryParams.append('offset', searchParams.offset.toString());}
 
       const response = await fetch(`${this.baseUrl}/search?${queryParams}`);
-      if (!response.ok) throw new Error('Failed to search AI actions');
+      if (!response.ok) {throw new Error('Failed to search AI actions');}
 
       const data: AIActionListResponse = await response.json();
       return data.actions;
@@ -168,7 +168,7 @@ class AIActionService {
         body: JSON.stringify(requestBody),
       });
       
-      if (!response.ok) throw new Error('Failed to execute AI action');
+      if (!response.ok) {throw new Error('Failed to execute AI action');}
 
       const data: AIActionResponse = await response.json();
       return data.execution;
@@ -191,7 +191,7 @@ class AIActionService {
         body: JSON.stringify(testData),
       });
       
-      if (!response.ok) throw new Error('Failed to test AI action');
+      if (!response.ok) {throw new Error('Failed to test AI action');}
 
       const data: AIActionResponse = await response.json();
       return data.execution;
@@ -214,7 +214,7 @@ class AIActionService {
         body: JSON.stringify(cloneData),
       });
       
-      if (!response.ok) throw new Error('Failed to clone AI action');
+      if (!response.ok) {throw new Error('Failed to clone AI action');}
 
       const data = await response.json();
       return data.action;
@@ -237,15 +237,15 @@ class AIActionService {
   }): Promise<AIActionExecution[]> {
     try {
       const queryParams = new URLSearchParams();
-      if (params?.actionId) queryParams.append('actionId', params.actionId);
-      if (params?.resourcePath) queryParams.append('resourcePath', params.resourcePath);
-      if (params?.userId) queryParams.append('userId', params.userId);
-      if (params?.status) queryParams.append('status', params.status);
-      if (params?.limit) queryParams.append('limit', params.limit.toString());
-      if (params?.offset) queryParams.append('offset', params.offset.toString());
+      if (params?.actionId) {queryParams.append('actionId', params.actionId);}
+      if (params?.resourcePath) {queryParams.append('resourcePath', params.resourcePath);}
+      if (params?.userId) {queryParams.append('userId', params.userId);}
+      if (params?.status) {queryParams.append('status', params.status);}
+      if (params?.limit) {queryParams.append('limit', params.limit.toString());}
+      if (params?.offset) {queryParams.append('offset', params.offset.toString());}
 
       const response = await fetch(`${this.executionsUrl}?${queryParams}`);
-      if (!response.ok) throw new Error('Failed to fetch executions');
+      if (!response.ok) {throw new Error('Failed to fetch executions');}
 
       const data: AIActionExecutionListResponse = await response.json();
       return data.executions;
@@ -261,7 +261,7 @@ class AIActionService {
   async getExecution(executionId: string): Promise<AIActionExecution> {
     try {
       const response = await fetch(`${this.executionsUrl}/${executionId}`);
-      if (!response.ok) throw new Error('Failed to fetch execution');
+      if (!response.ok) {throw new Error('Failed to fetch execution');}
 
       const data = await response.json();
       return data.execution;
@@ -280,7 +280,7 @@ class AIActionService {
         method: 'POST',
       });
       
-      if (!response.ok) throw new Error('Failed to cancel execution');
+      if (!response.ok) {throw new Error('Failed to cancel execution');}
 
       const data = await response.json();
       return data.success;
@@ -299,7 +299,7 @@ class AIActionService {
         method: 'DELETE',
       });
       
-      if (!response.ok) throw new Error('Failed to delete execution');
+      if (!response.ok) {throw new Error('Failed to delete execution');}
     } catch (error) {
       console.error('Error deleting execution:', error);
       throw error;
@@ -312,7 +312,7 @@ class AIActionService {
   async getActionStatistics(actionId: string): Promise<Record<string, any>> {
     try {
       const response = await fetch(`${this.executionsUrl}/stats?actionId=${actionId}`);
-      if (!response.ok) throw new Error('Failed to fetch action statistics');
+      if (!response.ok) {throw new Error('Failed to fetch action statistics');}
 
       const data = await response.json();
       return data.statistics;
@@ -328,7 +328,7 @@ class AIActionService {
   async getSystemStats(): Promise<AIActionStats> {
     try {
       const response = await fetch(`${this.executionsUrl}/stats?system=true`);
-      if (!response.ok) throw new Error('Failed to fetch system statistics');
+      if (!response.ok) {throw new Error('Failed to fetch system statistics');}
 
       const data = await response.json();
       return data.statistics;
@@ -344,7 +344,7 @@ class AIActionService {
   async getConfiguration(): Promise<AIActionConfig> {
     try {
       const response = await fetch(`${this.baseUrl}/config`);
-      if (!response.ok) throw new Error('Failed to fetch configuration');
+      if (!response.ok) {throw new Error('Failed to fetch configuration');}
 
       return await response.json();
     } catch (error) {
@@ -366,7 +366,7 @@ class AIActionService {
         body: JSON.stringify(config),
       });
       
-      if (!response.ok) throw new Error('Failed to update configuration');
+      if (!response.ok) {throw new Error('Failed to update configuration');}
 
       return await response.json();
     } catch (error) {
@@ -388,7 +388,7 @@ class AIActionService {
         body: JSON.stringify(configuration),
       });
       
-      if (!response.ok) throw new Error('Failed to import actions');
+      if (!response.ok) {throw new Error('Failed to import actions');}
 
       const data = await response.json();
       return data.actions;
@@ -411,7 +411,7 @@ class AIActionService {
         body: JSON.stringify({ actionIds }),
       });
       
-      if (!response.ok) throw new Error('Failed to export actions');
+      if (!response.ok) {throw new Error('Failed to export actions');}
 
       return await response.json();
     } catch (error) {
@@ -426,7 +426,7 @@ class AIActionService {
   async getProviders(): Promise<any[]> {
     try {
       const response = await fetch(`${this.baseUrl}/providers`);
-      if (!response.ok) throw new Error('Failed to fetch providers');
+      if (!response.ok) {throw new Error('Failed to fetch providers');}
 
       return await response.json();
     } catch (error) {
@@ -444,7 +444,7 @@ class AIActionService {
         method: 'POST',
       });
       
-      if (!response.ok) throw new Error('Failed to test provider');
+      if (!response.ok) {throw new Error('Failed to test provider');}
 
       const data = await response.json();
       return data.success;

@@ -1,40 +1,60 @@
-# BMAD Documentation Index
+# AEMFlow BMAD
 
-## Growth Initiative Documentation
+Business Model for AI Development (BMAD) with BEADS methodology.
 
-| Document | Purpose |
-|----------|---------|
-| [BEAD_TASK_BREAKDOWN.md](./BEAD_TASK_BREAKDOWN.md) | 42 detailed tasks across 6 sprints |
-| [SPEC_GROWTH_INITIATIVE.md](./SPEC_GROWTH_INITIATIVE.md) | BMAD phases 00-06 specification |
+## Structure
 
-## Gastown Orchestration
+```
+bmad/
+├── PRODUCT_SPEC.md           # Product definition (Phase 00-03)
+├── MVP_TASK_BREAKDOWN.md     # MVP-focused task list
+├── SPEC_GROWTH_INITIATIVE.md # Original growth spec
+├── BEAD_TASK_BREAKDOWN.md    # Full 42-task breakdown (reference)
+├── README.md                 # This file
+└── gastown/
+    ├── config/               # Agent orchestration
+    ├── agents/               # Agent personas
+    └── bead/.issues/         # Task tracking
+```
 
-| Path | Purpose |
-|------|---------|
-| `gastown/config/gastown.yaml` | Agent orchestration config |
-| `gastown/agents/mayor.md` | Mayor agent persona |
-| `gastown/agents/*.md` | Agent personas (coder, tester, reviewer, docs) |
-| `gastown/bead/` | BEAD issue tracking |
+## Current Focus: MVP
 
-## Quick Start
+We pivoted from "feature factory" to **validated product development**.
 
-To begin orchestration:
+### What Changed
 
-1. Read `bmad/gastown/agents/mayor.md`
-2. Review `bmad/BEAD_TASK_BREAKDOWN.md`
-3. Start with Sprint 1: `AEMF-001` (Infrastructure Setup)
+| Before | After |
+|--------|-------|
+| 42 tasks, 6 sprints | 11 tasks, 4 sprints (MVP) |
+| Build without validation | Build-Measure-Learn loop |
+| Technical metrics | User outcome metrics |
+| "Done" = code shipped | "Done" = users adopt |
 
-## Task Status Board
+### MVP Goals
 
-| Sprint | Focus | Status |
-|--------|-------|--------|
-| 1 | Foundation | Ready to start |
-| 2 | Core Features | Pending |
-| 3 | AI Integration | Pending |
-| 4 | Enterprise Features | Pending |
-| 5 | AEM Integration | Pending |
-| 6 | Production Hardening | Pending |
+1. **Visual Editor** - Drag-drop workflow canvas
+2. **Export** - AEM XML generation
+3. **AI** - Text-to-workflow
+4. **Validation** - Real-time error checking
 
----
+### Success Metrics
 
-*Last updated: 2026-03-15*
+- 20+ beta users
+- Workflow creation < 5 min (vs 15 min XML)
+- 0 critical bugs
+
+## Active Sprint
+
+**Sprint 1: Core Visual Editor**
+
+- [ ] MVP-001: Visual Canvas
+- [ ] MVP-002: Basic Nodes  
+- [ ] MVP-003: Edge Connections
+
+## Product Spec
+
+See `PRODUCT_SPEC.md` for:
+- Target user definition
+- Pain points validated
+- Success metrics (OKRs)
+- Go-to-market strategy

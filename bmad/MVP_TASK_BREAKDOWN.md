@@ -6,10 +6,47 @@
 
 **Target User**: AEM Developers (6-15 years experience)
 
+**⚠️ CRITICAL**: This spec contains hypotheses, not validated facts. MVP-000 must be completed FIRST to validate assumptions.
+
 **Success Metrics**:
-- 20+ beta users actively building workflows
-- Time-to-create workflow < 5 minutes (vs 15 min XML)
+- 20+ beta users actively building workflows (not assumed)
+- Time-to-create workflow < 5 minutes (measured, not assumed)
 - 0 critical bugs in production
+
+---
+
+## Sprint 0: User Discovery (BMAD 01) - MUST START FIRST
+
+### MVP-000: User Research & Validation
+
+```yaml
+beadId: MVP-000
+phase: 01-Discovery
+owner: Mayor Agent
+title: User Discovery & Validation
+status: pending
+priority: critical
+depends_on: []
+notes:
+  - Interview 5+ AEM developers
+  - Validate pain points (XML workflow debugging, time spent)
+  - Test price sensitivity ($29/mo - too much/just right/too cheap)
+  - Find 20 beta user candidates
+  - Document findings in bmad/discovery/
+```
+
+**Deliverables:**
+- [ ] User interview transcripts (5+)
+- [ ] Validated pain point list
+- [ ] 20 beta user signups
+- [ ] Price validation feedback
+- [ ] Go/No-Go decision for MVP scope
+
+**Questions to Answer:**
+1. Do AEM developers actually spend 40%+ time on XML workflows?
+2. Would they pay $29/mo for a visual solution?
+3. What features matter most to them?
+4. How do they currently create workflows?
 
 ---
 
@@ -270,15 +307,34 @@ Before each feature is complete:
 
 | Sprint | Planned | Completed | Notes |
 |--------|---------|-----------|-------|
+| Sprint 0 | 1 bead | ? | User Discovery (MUST FIRST) |
 | Sprint 1 | 3 beads | ? | Visual Editor |
 | Sprint 2 | 3 beads | ? | Save/Load/Export |
 | Sprint 3 | 2 beads | ? | AI Integration |
 | Sprint 4 | 3 beads | ? | Validation/Docs |
-| **Total** | **11 beads** | | **MVP** |
+| **Total** | **12 beads** | | **MVP** |
 
 ---
 
-## Notes
+## ⚠️ Important Notes
+
+**STOP - READ BEFORE CONTINUING:**
+
+1. **MVP-000 is mandatory** - Do not start coding until user research is done
+2. **This is a hypothesis-driven product** - Every assumption needs validation
+3. **If users don't validate pain points** - Pivot or cancel
+4. **If users won't pay $29** - Adjust pricing or business model
+5. **If can't find 20 beta users** - Reconsider product-market fit
+
+## Build-Measure-Learn Schedule
+
+| Week | Sprint | Build | Measure | Learn |
+|------|--------|-------|---------|-------|
+| 1 | Sprint 0 | User Interviews | Survey | Pain points validated? |
+| 2 | Sprint 1 | Visual Editor | Internal | UX works? |
+| 3 | Sprint 2 | Save/Load/Export | 5 beta users | Export accurate? |
+| 4 | Sprint 3 | AI Generation | 10 beta users | AI useful? |
+| 5 | Sprint 4 | Validation | 20 beta users | Errors caught? |
 
 - All tasks must tie back to product requirements (PR-01 through PR-06)
 - Focus on MVP only - resist scope creep

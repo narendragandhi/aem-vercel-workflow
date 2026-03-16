@@ -28,31 +28,33 @@ Current state:
 - AEM as a Cloud Service / AEM 6.5+
 - Enterprise companies with AEM teams (10+ developers)
 
-### Pain Points (Validated)
+### Pain Points (Assumed - NEEDS VALIDATION)
 
-| Pain Point | Frequency | Impact |
-|------------|-----------|--------|
-| XML workflow debugging | Daily | High |
-| Trial-and-error AEM workflow syntax | Daily | High |
-| No visual feedback during editing | Daily | Medium |
-| Time-consuming workflow testing | Weekly | High |
-| Knowledge silos (only seniors know workflows) | Weekly | High |
+| Pain Point | Frequency | Impact | Validated By |
+|------------|-----------|--------|--------------|
+| XML workflow debugging | Daily | High | [ ] User Interview |
+| Trial-and-error AEM workflow syntax | Daily | High | [ ] User Interview |
+| No visual feedback during editing | Daily | Medium | [ ] User Interview |
+| Time-consuming workflow testing | Weekly | High | [ ] User Interview |
+| Knowledge silos (only seniors know workflows) | Weekly | High | [ ] User Interview |
 
 ---
 
 ## BMAD Phase 01: Market & User Discovery
 
-### Competitive Landscape
+### Competitive Landscape (Assumptions - NEEDS VALIDATION)
 
-| Competitor | Strength | Weakness | AEMFlow Advantage |
-|------------|----------|----------|-------------------|
-| Adobe Experience Manager Workflow Console | Native | No AI, Basic UI | Visual + AI |
-| Visio/Lucidchart | Great UI | No AEM export | AEM-native |
-| AEM Workflow Builder (older) | Built-in | Obsolete | Modern tech |
+| Competitor | Strength | Weakness | AEMFlow Hypothesized Advantage |
+|------------|----------|----------|-------------------------------|
+| Adobe Experience Manager Workflow Console | Native | No AI, Basic UI | Visual + AI (unproven) |
+| Visio/Lucidchart | Great UI | No AEM export | AEM-native (unproven) |
+| AEM Workflow Builder (older) | Built-in | Obsolete | Modern tech (unproven) |
 
-### Unique Value Proposition
+### Unique Value Proposition (Hypothesis)
 
 **"Visual AI-powered AEM workflow development that cuts development time by 60%"**
+
+*This value proposition is a hypothesis. It must be validated through user testing.*
 
 ### Differentiators
 
@@ -67,12 +69,12 @@ Current state:
 
 ### Success Metrics (OKRs)
 
-| Objective | Key Result | Target |
-|-----------|------------|--------|
-| **Adoption** | Weekly Active Users | 50 by Q3 |
-| **Time Savings** | Workflow creation time | -60% vs XML |
-| **Quality** | Workflow error rate | -80% |
-| **Satisfaction** | NPS Score | 40+ |
+| Objective | Key Result | Target | Timeline |
+|-----------|------------|--------|----------|
+| **Adoption** | Weekly Active Users | 50 | By Sept 2026 |
+| **Time Savings** | Workflow creation time | -60% vs XML | By Sept 2026 |
+| **Quality** | Workflow error rate | -80% | By Sept 2026 |
+| **Satisfaction** | NPS Score | 40+ | By Sept 2026 |
 
 ### MVP Scope
 
@@ -165,19 +167,29 @@ Current state:
 
 ## Go-to-Market Strategy
 
+### Pre-Launch (Weeks -2 to 0)
+
+| Task | Owner | Status |
+|------|-------|--------|
+| Secure domain (aemflow.com) | Founder | [ ] Not started |
+| Build landing page | Founder | [ ] Not started |
+| Create waitlist/signup form | Founder | [ ] Not started |
+| Write launch blog post | Founder | [ ] Not started |
+
 ### Launch Phases
 
-| Phase | Timeline | Focus |
-|-------|----------|-------|
-| Private Beta | Week 1-4 | 20 AEM developers |
-| Public Beta | Week 5-8 | 100 users |
-| v1.0 Launch | Week 9-12 | General availability |
+| Phase | Timeline | Focus | Target |
+|-------|----------|-------|--------|
+| Private Beta | Mar 17 - Apr 13 (Week 1-4) | 20 AEM developers | 20 signups |
+| Public Beta | Apr 14 - May 11 (Week 5-8) | 100 users | 100 signups |
+| v1.0 Launch | May 12 - Jun 8 (Week 9-12) | General availability | 500 users |
 
 ### Distribution Channels
 
-1. **Direct**: aemflow.com
-2. **AEM Community**: Blog posts, forums
+1. **Direct**: aemflow.com (landing page + app)
+2. **AEM Community**: Adobe forums, AEM Slack, LinkedIn
 3. **GitHub**: Open source core, paid features
+4. **Content**: Blog posts, tutorials, YouTube demos
 
 ### Pricing Model
 
@@ -193,18 +205,20 @@ Current state:
 
 ### Before Building (Must Answer)
 
-- [x] Who is the target user? → AEM Developers
-- [x] What problem do they have? → XML workflow is slow/error-prone
-- [x] How do we solve it better? → Visual + AI generation
-- [x] How will we measure success? → Time savings, error reduction
-- [x] What's the MVP scope? → Visual Editor + AI + Validation + Export
+- [ ] **User Interviews**: 5+ AEM developers interviewed
+- [x] Who is the target user? → AEM Developers (hypothesis)
+- [x] What problem do they have? → XML workflow is slow/error-prone (hypothesis)
+- [x] How do we solve it better? → Visual + AI generation (hypothesis)
+- [x] How will we measure success? → Time savings, error reduction (hypothesis)
+- [x] What's the MVP scope? → Visual Editor + AI + Validation + Export (hypothesis)
 
 ### After MVP (Must Validate)
 
-- [ ] 20+ beta users actively building workflows
-- [ ] Time-to-create workflow < 5 minutes (vs 15 min XML)
+- [ ] 20+ beta users actively building workflows (not assumed - need signups)
+- [ ] Time-to-create workflow < 5 minutes (measured, not assumed)
 - [ ] 0 critical bugs in production
 - [ ] User feedback collected and incorporated
+- [ ] Value proposition validated (users actually save time)
 
 ---
 
@@ -213,9 +227,12 @@ Current state:
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2026-03-16 | PM Review | Initial product specification |
+| 1.1 | 2026-03-16 | PM Review | Added validation requirements, fixed timeline dates, added GTM |
 
 ## Approval
 
-- [ ] Product Strategy: _________________ Date: _______
+- [ ] Product Strategy (Validated pain points): _________________ Date: _______
 - [ ] Technical Feasibility: _________________ Date: _______
 - [ ] Resource Commitment: _________________ Date: _______
+- [ ] Beta User Acquisition Plan: _________________ Date: _______
+- [ ] Landing Page Secured: _________________ Date: _______

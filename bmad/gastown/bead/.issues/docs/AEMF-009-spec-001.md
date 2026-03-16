@@ -3,7 +3,7 @@ id: AEMF-009-spec-001
 workflow_id: AEMF-009
 type: specification
 agent: docs
-status: pending
+status: completed
 priority: high
 depends_on: []
 blocks: [AEMF-009-impl-001]

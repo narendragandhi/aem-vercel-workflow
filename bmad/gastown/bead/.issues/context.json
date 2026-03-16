@@ -2,24 +2,23 @@
   "version": "1.0",
   "project": "aemflow",
   "last_updated": "2026-03-16",
-  "active_workflows": ["MRW-001", "AEMF-001", "AEMF-002", "AEMF-003", "AEMF-005", "AEMF-007", "AEMF-008", "AEMF-009"],
-  "active_issues": [
-    "AEMF-002-impl-001", "AEMF-003-impl-001", "AEMF-005-spec-001",
-    "AEMF-002-test-001", "AEMF-003-test-001",
-    "AEMF-002-review-001", "AEMF-003-review-001", "AEMF-005-review-001",
-    "AEMF-007-spec-001", "AEMF-008-spec-001", "AEMF-009-spec-001"
-  ],
+  "active_workflows": ["MVP-000"],
+  "active_issues": ["MVP-000-spec-001"],
   "completed_issues": [
     "MRW-001-review-001", "MRW-001-spec-001", "MRW-001-impl-001", "MRW-001-test-001",
-    "AEMF-002-spec-001", "AEMF-003-spec-001"
+    "AEMF-002-spec-001", "AEMF-003-spec-001",
+    "AEMF-002-impl-001", "AEMF-003-impl-001", "AEMF-005-spec-001",
+    "AEMF-007-spec-001", "AEMF-007-impl-001",
+    "AEMF-008-spec-001", "AEMF-008-impl-001",
+    "AEMF-009-spec-001", "AEMF-009-impl-001"
   ],
   "blocked_issues": [],
   "statistics": {
-    "total_beads": 30,
-    "completed": 6,
-    "in_progress": 3,
+    "total_beads": 1,
+    "completed": 0,
+    "in_progress": 1,
     "blocked": 0,
-    "pending": 21
+    "pending": 0
   },
-  "notes": "Sprint 1 in progress (AEMF-001,002,003,005). Sprint 2 queued (AEMF-007,008,009). Total 8 active workflows."
+  "notes": "MVP-000: User Discovery - MUST complete before coding. Find 5 AEM devs, validate pain points, collect 20 beta signups."
 }

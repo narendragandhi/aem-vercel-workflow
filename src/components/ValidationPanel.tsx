@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { AlertCircle, AlertTriangle, Info, X } from 'lucide-react';
-import { ValidationResult, ValidationIssue } from '../../utils/validator';
+import { ValidationIssue, ValidationResult } from '../../utils/validator';
 
 interface ValidationPanelProps {
   result: ValidationResult | null;

@@ -14,10 +14,10 @@ export const DelayNode: React.FC<NodeProps<DelayNodeData>> = ({ data, selected }
   const unit = data.unit || 'ms';
   
   const formatDuration = () => {
-    if (unit === 'ms') return `${duration}ms`;
-    if (unit === 'seconds') return `${duration}s`;
-    if (unit === 'minutes') return `${duration}m`;
-    if (unit === 'hours') return `${duration}h`;
+    if (unit === 'ms') {return `${duration}ms`;}
+    if (unit === 'seconds') {return `${duration}s`;}
+    if (unit === 'minutes') {return `${duration}m`;}
+    if (unit === 'hours') {return `${duration}h`;}
     return `${duration}`;
   };
   

@@ -30,6 +30,16 @@ buildNumber.properties
 Thumbs.db
 
 # Frontend
-/node_modules
-/dist
+node_modules/
+dist/
+coverage/
 .vercel
+tests/e2e/test-results/
+tests/e2e/playwright-report/
+
+# Build artifacts (all modules)
+target/
+node/
+
+# OS
+**/.DS_Store

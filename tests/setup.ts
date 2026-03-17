@@ -14,6 +14,30 @@ global.ResizeObserver = class ResizeObserver {
   disconnect() {}
 };
 
+// Mock BroadcastChannel (used by collaboration service)
+global.BroadcastChannel = class BroadcastChannel {
+  onmessage: ((event: MessageEvent) => void) | null = null;
+  onmessageerror: ((event: MessageEvent) => void) | null = null;
+  name: string;
+  readyState: string = 'open';
+  
+  constructor(name: string) {
+    this.name = name;
+  }
+  
+  postMessage(_message: unknown): void {
+    // No-op in tests
+  }
+  
+  close(): void {
+    // No-op in tests
+  }
+  
+  addEventListener(): void {}
+  removeEventListener(): void {}
+  dispatchEvent(): boolean { return true; }
+};
+
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
   root = null;

@@ -15,19 +15,24 @@ import { Background, BackgroundVariant } from '@reactflow/background';
 import { Controls } from '@reactflow/controls';
 import { MiniMap } from '@reactflow/minimap';
 import {
-  AlertCircle, AlertTriangle, ArrowRightCircle, BarChart3, BookOpen, CheckCircle, Clock,
-  Cog, Command, Download, FileText, FileUp, GitBranch, Globe,
+  AlertCircle, AlertTriangle, ArrowRightCircle, BarChart3, BookOpen, Brain, CheckCircle, Clock,
+  Cloud, Cog, Command, Download, FileText, FileUp, GitBranch, Globe,
   Grid3X3, Image, Layout, Library, Loader2, Mail,
   Moon, Play, Plus, Redo2, RotateCcw, Route,
   Save, Send, Settings, Sparkles, Sun, Trash2, Undo2, Upload,
-  User, UserCheck, X, Zap
+  User, UserCheck, Users, X, Zap
 } from 'lucide-react';
 import { WorkflowSimulator } from './WorkflowSimulator';
 import { WorkflowAnalytics } from './WorkflowAnalytics';
+import { WorkflowAnalysis } from './WorkflowAnalysis';
 import { CommandPalette, createDefaultCommands } from './CommandPalette';
 import { TemplateGallery } from './TemplateGallery';
 import { DocumentationGenerator } from './DocumentationGenerator';
 import { ValidationPanel } from './ValidationPanel';
+import { AEMIntegrationPanel } from './AEMIntegrationPanel';
+import { CollaborationPanel } from './CollaborationPanel';
+import { CollaborationCursors, useCollaborationUsers } from './CollaborationCursors';
+import { collaborationService } from '@/services/collaborationService';
 import { validateWorkflow, ValidationResult } from '../utils/validator';
 import { ADVANCED_TEMPLATES } from '../data/advancedTemplates';
 import { downloadFile, exportToAEMXML, exportToJSON, exportToMarkdown, exportToYAML, generateMermaidDiagram } from '../utils/exporters';
@@ -532,7 +537,15 @@ interface AIGeneratedWorkflow {
   edges: Edge[];
 }
 
-type AIProvider = 'pattern' | 'openai' | 'ollama';
+type AIProvider = 'pattern' | 'openai' | 'ollama' | 'anthropic' | 'gemini';
+
+const AEM_WORKFLOW_SYSTEM_PROMPT = `You are an AEM workflow expert. Generate a workflow based on the user's description. 
+Return ONLY a JSON object with this exact structure:
+{
+  "nodes": [{"id": "string", "type": "string", "position": {"x": number, "y": number}, "data": {"label": "string", "description": "string", "participant": "string?"}}],
+  "edges": [{"id": "string", "source": "string", "target": "string", "label": "string?"}]
+}
+Valid node types: aemStep, processStep, branch, damUpdate, emailNotification, participantChooser, graniteRouting, formsProcess, damMetadata, damTranscode, callWorkflow, pageActivation, startEnd, condition, loop, parallel, delay, errorHandler`;
 
 const generateWorkflowFromAI = async (
   prompt: string, 
@@ -723,7 +736,7 @@ Return ONLY a JSON object with this exact structure (no other text):
   "nodes": [{"id": "string", "type": "string", "position": {"x": number, "y": number}, "data": {"label": "string", "description": "string", "participant": "string?"}}],
   "edges": [{"id": "string", "source": "string", "target": "string", "label": "string?"}]
 }
-Valid node types: aemStep, processStep, branch, damUpdate, emailNotification, participantChooser, graniteRouting, formsProcess, damMetadata, damTranscode, callWorkflow, pageActivation, startEnd
+Valid node types: aemStep, processStep, branch, damUpdate, emailNotification, participantChooser, graniteRouting, formsProcess, damMetadata, damTranscode, callWorkflow, pageActivation, startEnd, condition, loop, parallel, delay, errorHandler
 
 User request: ${prompt}`,
           stream: false,
@@ -746,6 +759,89 @@ User request: ${prompt}`,
     } catch (error) {
       console.error('Ollama API error:', error);
       alert('Could not connect to Ollama. Make sure it is running (ollama serve)');
+    }
+  }
+
+  if (provider === 'anthropic' && apiKey) {
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: 'claude-3-5-sonnet-20241022',
+          max_tokens: 4096,
+          messages: [
+            {
+              role: 'user',
+              content: `${AEM_WORKFLOW_SYSTEM_PROMPT}\n\nUser request: ${prompt}`
+            }
+          ]
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const content = data.content[0]?.text || '';
+        
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          return {
+            nodes: parsed.nodes.map((n: any) => ({ ...n, draggable: true })),
+            edges: parsed.edges.map((e: any) => ({ ...e, animated: true })),
+          };
+        }
+      }
+    } catch (error) {
+      console.error('Anthropic API error:', error);
+    }
+  }
+
+  if (provider === 'gemini' && apiKey) {
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: `${AEM_WORKFLOW_SYSTEM_PROMPT}\n\nUser request: ${prompt}`
+                }
+              ]
+            }
+          ],
+          generationConfig: {
+            temperature: 0.7,
+            topP: 0.95,
+            topK: 40,
+            maxOutputTokens: 4096,
+          }
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const content = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          return {
+            nodes: parsed.nodes.map((n: any) => ({ ...n, draggable: true })),
+            edges: parsed.edges.map((e: any) => ({ ...e, animated: true })),
+          };
+        }
+      }
+    } catch (error) {
+      console.error('Gemini API error:', error);
     }
   }
 
@@ -773,6 +869,9 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
   const [showAI, setShowAI] = useState(false);
   const [showSimulator, setShowSimulator] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showAnalysis, setShowAnalysis] = useState(false);
+  const [showAEM, setShowAEM] = useState(false);
+  const [showCollaboration, setShowCollaboration] = useState(false);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showTemplateGallery, setShowTemplateGallery] = useState(false);
   const [showDocGenerator, setShowDocGenerator] = useState(false);
@@ -798,6 +897,8 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { saveWorkflow } = useWorkflowStore();
+
+  const collaborationUsers = useCollaborationUsers();
 
   // IMPORTANT: Define initialNodes/initialEdges FIRST, then use them in useNodesState/useEdgesState
   const initialNodes = useMemo(() => {
@@ -988,6 +1089,60 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [undo, redo]);
+
+  // Collaboration: Connect to collaboration service when opening
+  useEffect(() => {
+    if (workflow?.id) {
+      collaborationService.connect(workflow.id);
+    }
+    return () => {
+      collaborationService.disconnect();
+    };
+  }, [workflow?.id]);
+
+  // Collaboration: Subscribe to incoming workflow updates
+  useEffect(() => {
+    const unsubscribe = collaborationService.subscribe((message) => {
+      if (message.type === 'sync' && message.userId !== collaborationService.getCurrentUser().id) {
+        const incomingWorkflow = message.payload as { nodes: Node[]; edges: Edge[] };
+        if (incomingWorkflow.nodes && incomingWorkflow.edges) {
+          setNodes(incomingWorkflow.nodes);
+          setEdges(incomingWorkflow.edges);
+        }
+      }
+    });
+    return unsubscribe;
+  }, [setNodes, setEdges]);
+
+  // Collaboration: Handle mouse move for cursor sharing
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    collaborationService.sendCursorPosition(e.clientX, e.clientY);
+  }, []);
+
+  useEffect(() => {
+    if (showCollaboration) {
+      window.addEventListener('mousemove', handleMouseMove);
+      return () => window.removeEventListener('mousemove', handleMouseMove);
+    }
+  }, [showCollaboration, handleMouseMove]);
+
+  // Collaboration: Broadcast changes when nodes/edges update
+  useEffect(() => {
+    if (collaborationService.isConnected() && nodes.length > 0) {
+      const timeout = setTimeout(() => {
+        collaborationService.sendWorkflowUpdate({
+          id: workflow?.id || 'draft',
+          name: workflow?.name || 'Untitled',
+          steps: nodes.map(n => ({ id: n.id, type: n.type || '', position: n.position, data: n.data })),
+          edges: edges.map(e => ({ id: e.id, source: e.source, target: e.target, sourceHandle: e.sourceHandle ?? undefined, targetHandle: e.targetHandle ?? undefined })),
+          createdAt: workflow?.createdAt || new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          createdBy: workflow?.createdBy || 'unknown',
+        });
+      }, 500);
+      return () => clearTimeout(timeout);
+    }
+  }, [nodes, edges, workflow]);
 
   const onConnect = useCallback(
     (params: Connection) => {
@@ -1489,11 +1644,12 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '13px' }}>
                 AI Provider:
               </label>
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 <button
                   onClick={() => setAiProvider('pattern')}
                   style={{
                     flex: 1,
+                    minWidth: '120px',
                     padding: '10px',
                     background: aiProvider === 'pattern' ? '#3b82f6' : (darkMode ? '#334155' : '#f1f5f9'),
                     color: aiProvider === 'pattern' ? 'white' : textColor,
@@ -1509,6 +1665,7 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
                   onClick={() => setAiProvider('ollama')}
                   style={{
                     flex: 1,
+                    minWidth: '120px',
                     padding: '10px',
                     background: aiProvider === 'ollama' ? '#10b981' : (darkMode ? '#334155' : '#f1f5f9'),
                     color: aiProvider === 'ollama' ? 'white' : textColor,
@@ -1524,6 +1681,7 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
                   onClick={() => setAiProvider('openai')}
                   style={{
                     flex: 1,
+                    minWidth: '120px',
                     padding: '10px',
                     background: aiProvider === 'openai' ? '#8b5cf6' : (darkMode ? '#334155' : '#f1f5f9'),
                     color: aiProvider === 'openai' ? 'white' : textColor,
@@ -1534,6 +1692,38 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
                   }}
                 >
                   OpenAI
+                </button>
+                <button
+                  onClick={() => setAiProvider('anthropic')}
+                  style={{
+                    flex: 1,
+                    minWidth: '120px',
+                    padding: '10px',
+                    background: aiProvider === 'anthropic' ? '#d97706' : (darkMode ? '#334155' : '#f1f5f9'),
+                    color: aiProvider === 'anthropic' ? 'white' : textColor,
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontWeight: aiProvider === 'anthropic' ? '600' : '400',
+                  }}
+                >
+                  Claude
+                </button>
+                <button
+                  onClick={() => setAiProvider('gemini')}
+                  style={{
+                    flex: 1,
+                    minWidth: '120px',
+                    padding: '10px',
+                    background: aiProvider === 'gemini' ? '#06b6d4' : (darkMode ? '#334155' : '#f1f5f9'),
+                    color: aiProvider === 'gemini' ? 'white' : textColor,
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontWeight: aiProvider === 'gemini' ? '600' : '400',
+                  }}
+                >
+                  Gemini
                 </button>
               </div>
             </div>
@@ -1612,6 +1802,58 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
               />
               <p style={{ fontSize: '12px', color: darkMode ? '#94a3b8' : '#64748b', marginTop: '6px' }}>
                 Get your key from <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6' }}>OpenAI</a>
+              </p>
+            </div>
+            )}
+
+            {aiProvider === 'anthropic' && (
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '13px' }}>
+                Anthropic API Key:
+              </label>
+              <input
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="sk-ant-..."
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  border: `1px solid ${borderColor}`,
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  background: darkMode ? '#334155' : 'white',
+                  color: textColor,
+                }}
+              />
+              <p style={{ fontSize: '12px', color: darkMode ? '#94a3b8' : '#64748b', marginTop: '6px' }}>
+                Get your key from <a href="https://console.anthropic.com/" target="_blank" rel="noopener noreferrer" style={{ color: '#d97706' }}>Anthropic Console</a>
+              </p>
+            </div>
+            )}
+
+            {aiProvider === 'gemini' && (
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '13px' }}>
+                Google Gemini API Key:
+              </label>
+              <input
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="AIza..."
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  border: `1px solid ${borderColor}`,
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  background: darkMode ? '#334155' : 'white',
+                  color: textColor,
+                }}
+              />
+              <p style={{ fontSize: '12px', color: darkMode ? '#94a3b8' : '#64748b', marginTop: '6px' }}>
+                Get your key from <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style={{ color: '#06b6d4' }}>Google AI Studio</a>
               </p>
             </div>
             )}
@@ -1726,6 +1968,41 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
           darkMode={darkMode}
         />
       )}
+
+      {/* AI Workflow Analysis */}
+      {showAnalysis && (
+        <WorkflowAnalysis
+          nodes={nodes}
+          edges={edges}
+          onClose={() => setShowAnalysis(false)}
+          darkMode={darkMode}
+        />
+      )}
+
+      {/* AEM Integration */}
+      {showAEM && (
+        <AEMIntegrationPanel
+          isOpen={showAEM}
+          onClose={() => setShowAEM(false)}
+          onImportWorkflow={(workflowData) => {
+            console.log('Imported workflow:', workflowData);
+            setShowAEM(false);
+          }}
+          exportFunction={() => exportToAEMXML(nodes, edges)}
+        />
+      )}
+
+      {/* Collaboration Panel */}
+      <CollaborationPanel
+        isOpen={showCollaboration}
+        onClose={() => setShowCollaboration(false)}
+      />
+
+      {/* Collaboration Cursors */}
+      <CollaborationCursors
+        users={collaborationUsers}
+        currentUserId={collaborationService.getCurrentUser().id}
+      />
 
       {/* Validation Panel */}
       {showValidation && (
@@ -1940,6 +2217,15 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
               </button>
               <button onClick={() => setShowAnalytics(true)} style={{...topButtonStyle, background: '#06b6d4'}} title="Analytics Dashboard">
                 <BarChart3 size={16} /> Analytics
+              </button>
+              <button onClick={() => setShowAnalysis(true)} style={{...topButtonStyle, background: '#8b5cf6'}} title="AI Workflow Analysis">
+                <Brain size={16} /> Analyze
+              </button>
+              <button onClick={() => setShowAEM(true)} style={{...topButtonStyle, background: '#0ea5e9'}} title="AEM Integration">
+                <Cloud size={16} /> AEM
+              </button>
+              <button onClick={() => setShowCollaboration(true)} style={{...topButtonStyle, background: '#ec4899'}} title="Real-time Collaboration">
+                <Users size={16} /> Collaborate
               </button>
               <button onClick={() => setShowValidation(true)} style={{...topButtonStyle, background: validationResult?.valid === false ? '#ef4444' : '#22c55e'}} title="Validate Workflow">
                 <AlertTriangle size={16} /> Validate {validationResult && `(${validationResult.errorCount + validationResult.warningCount})`}

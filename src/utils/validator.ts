@@ -1,7 +1,8 @@
-import { Node, Edge } from '@reactflow/core';
+import { Edge, Node } from '@reactflow/core';
 
 export type ValidationSeverity = 'error' | 'warning' | 'info';
 
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 export interface ValidationIssue {
   id: string;
   severity: ValidationSeverity;
@@ -249,11 +250,11 @@ export const maxDepthRule: ValidationRule = {
     const maxDepth = 20;
     
     const getDepth = (nodeId: string, visited: Set<string> = new Set()): number => {
-      if (visited.has(nodeId)) return 0;
+      if (visited.has(nodeId)) {return 0;}
       visited.add(nodeId);
       
       const outgoing = edges.filter((e) => e.source === nodeId);
-      if (outgoing.length === 0) return 1;
+      if (outgoing.length === 0) {return 1;}
       
       let max = 0;
       for (const edge of outgoing) {

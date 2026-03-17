@@ -19,7 +19,11 @@
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:update": "playwright test --update-snapshots",
     "test:e2e:report": "playwright show-report tests/e2e/playwright-report",
-    "docs:jsdoc": "typedoc --out docs/api src"
+    "docs:jsdoc": "typedoc --out docs/api src",
+    "docs:javadoc": "cd core && mvn javadoc:javadoc",
+    "docs:javadoc:jar": "cd core && mvn javadoc:jar",
+    "build:all": "npm run build && cd core && mvn clean package",
+    "lint:all": "npm run lint && cd core && mvn validate"
   },
   "dependencies": {
     "@reactflow/background": "^11.3.14",

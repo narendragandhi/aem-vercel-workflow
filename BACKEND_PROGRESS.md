@@ -1,15 +1,15 @@
-# AEM Vercel Workflow Backend - Progress Update
+# AEMFlow Backend - Progress Update
 
 ## 🎯 Current Status: MAJOR PROGRESS MADE!
 
 ### ✅ Successfully Fixed Issues
-1. **Maven Dependencies**: AEM SDK API now downloading from Maven Central
-2. **Repository Configuration**: Added Adobe public repository to parent POM  
-3. **Simplified Dependencies**: Removed problematic uber-jar dependency
+1. **Maven Dependencies**: AEM SDK API configured in parent POM
+2. **Repository Configuration**: Adobe public repository configured in parent POM  
+3. **Dependency Management**: Centralized dependency versions in parent POM
 4. **Import Resolution**: Fixed most missing imports in model and service classes
 
 ### 🔧 Current Configuration
-- **AEM SDK API**: `2025.4.20626.20250425T133017Z-250400` (✅ Working)
+- **AEM SDK API**: `2023.12.13363.20231213T120324Z-231200`
 - **Core Dependencies**: Jackson + OSGi annotations (✅ Working)
 - **Build System**: Maven successfully resolving dependencies
 
@@ -58,7 +58,7 @@ AEM Backend Structure
 ```
 Maven Central
     ↓ Download
-AEM SDK API (2025.4)
+AEM SDK API (2023.12)
     ↓ Provides
 OSGi + JCR + Sling APIs
     ↓ Enables
@@ -68,7 +68,7 @@ Custom Workflow Services
 ## 🔍 Technical Details
 
 ### What's Working Now
-1. **Dependency Resolution**: AEM SDK downloads from Maven Central
+1. **Dependency Resolution**: AEM SDK configured via Adobe public repository
 2. **Base Compilation**: Core Java syntax issues resolved
 3. **Import System**: Most missing imports added
 4. **Build Pipeline**: Maven clean/compile cycle working
@@ -102,7 +102,7 @@ Custom Workflow Services
 ### Problem → Solution Mapping
 | Problem | Status | Solution |
 |---------|---------|----------|
-| AEM SDK not found | ✅ | Used Maven Central version |
+| AEM SDK not found | ✅ | Configured Adobe public repository |
 | Missing repositories | ✅ | Added Adobe repo + Maven Central |
 | Compilation errors | 🔄 | Fixed imports + method calls |
 | Dependency conflicts | ✅ | Simplified dependency tree |
@@ -115,9 +115,9 @@ Custom Workflow Services
 
 ---
 
-**Current Working Command**: `cd aem-vercel-workflow && mvn clean compile`
-**Estimated Completion**: 30-60 minutes for full compilation success
-**Risk Level**: LOW (Foundation is solid, only polish remaining)
+**Current Working Command**: `cd aemflow && mvn clean compile`
+**Estimated Completion**: Pending final backend integration tests
+**Risk Level**: MEDIUM (backend integration and REST validation still pending)
 
 ## 📝 Summary
 

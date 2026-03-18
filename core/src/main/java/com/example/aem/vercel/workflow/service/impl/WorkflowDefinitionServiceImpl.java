@@ -582,8 +582,8 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
         if (session.nodeExists(path)) {
             return session.getNode(path);
         }
-        String normalized = path.startsWith(\"/\") ? path.substring(1) : path;
-        String[] parts = normalized.split(\"/\");
+        String normalized = path.startsWith("/") ? path.substring(1) : path;
+        String[] parts = normalized.split("/");
         Node current = session.getRootNode();
         for (String part : parts) {
             if (current.hasNode(part)) {

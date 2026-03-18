@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.0.0-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.0.0-blue" alt="Version">
   <img src="https://img.shields.io/badge/react-18.2-61dafb" alt="React">
   <img src="https://img.shields.io/badge/typescript-5.2-3178c6" alt="TypeScript">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="License">
@@ -13,7 +13,7 @@
 
 ---
 
-## What's New in v2.0
+## Highlights
 
 - **15+ Enterprise Templates** - Production-ready workflow templates
 - **Workflow Simulator** - Step-by-step dry-run with decision points
@@ -49,7 +49,7 @@ Creating AEM workflows today means:
 ## Quick Start
 
 ```bash
-cd aemflow
+cd aemflow/ui.frontend
 npm install
 npm run dev
 ```
@@ -181,6 +181,7 @@ Describe your workflow in plain English:
 
 ### Development
 ```bash
+cd ui.frontend
 npm install
 npm run dev
 ```
@@ -203,26 +204,27 @@ npm run test:coverage
 
 ```
 aemflow/
-├── src/
-│   ├── components/
-│   │   ├── WorkflowBuilder.tsx     # Main editor
-│   │   ├── WorkflowSimulator.tsx   # Step-by-step simulator
-│   │   ├── WorkflowAnalytics.tsx   # Analytics dashboard
-│   │   ├── CommandPalette.tsx      # Quick actions
-│   │   ├── TemplateGallery.tsx     # Template browser
-│   │   ├── DocumentationGenerator.tsx  # Doc generator
-│   │   └── nodes/                  # 13 custom node types
-│   ├── data/
-│   │   └── advancedTemplates.ts    # 15+ enterprise templates
-│   ├── utils/
-│   │   └── exporters.ts            # Multi-format exporters
-│   ├── hooks/
-│   │   └── useWorkflowStore.ts     # State management
-│   └── types/
-│       └── workflow.ts             # TypeScript definitions
-├── core/                           # AEM Java bundle
-├── ui.apps/                        # AEM components
-└── ui.content/                     # Sample content
+├── ui.frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── WorkflowBuilder.tsx     # Main editor
+│   │   │   ├── WorkflowSimulator.tsx   # Step-by-step simulator
+│   │   │   ├── WorkflowAnalytics.tsx   # Analytics dashboard
+│   │   │   ├── CommandPalette.tsx      # Quick actions
+│   │   │   ├── TemplateGallery.tsx     # Template browser
+│   │   │   ├── DocumentationGenerator.tsx  # Doc generator
+│   │   │   └── nodes/                  # 13 custom node types
+│   │   ├── data/
+│   │   │   └── advancedTemplates.ts    # Enterprise templates
+│   │   ├── utils/
+│   │   │   └── exporters.ts            # Multi-format exporters
+│   │   ├── hooks/
+│   │   │   └── useWorkflowStore.ts     # State management
+│   │   └── types/
+│   │       └── workflow.ts             # TypeScript definitions
+├── core/                              # AEM Java bundle
+├── ui.apps/                           # AEM components
+└── ui.content/                        # Sample content
 ```
 
 ---
@@ -350,7 +352,7 @@ const mermaid = generateMermaidDiagram(nodes, edges);
 - **ReactFlow 11** - Visual workflow engine
 - **Zustand 4** - State management
 - **Vite 4** - Build tool
-- **Tailwind CSS 4** - Styling
+- **Tailwind CSS 3** - Styling
 - **Lucide React** - Icons
 
 ---

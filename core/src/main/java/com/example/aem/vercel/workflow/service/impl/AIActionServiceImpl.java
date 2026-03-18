@@ -436,7 +436,14 @@ public class AIActionServiceImpl implements AIActionService {
                         action.setConfiguration(configMap);
                     }
 
-                    action.setPromptTemplate((String) actionData.get("promptTemplate"));
+                    Object promptTemplateRaw = actionData.get("promptTemplate");
+                    if (promptTemplateRaw instanceof Map) {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> promptTemplate = (Map<String, Object>) promptTemplateRaw;
+                        action.setPromptTemplate(promptTemplate);
+                    } else if (promptTemplateRaw instanceof String) {
+                        action.setPromptTemplate(Map.of("template", promptTemplateRaw));
+                    }
 
                     @SuppressWarnings("unchecked")
                     Map<String, Object> outputSchema = (Map<String, Object>) actionData.get("outputSchema");

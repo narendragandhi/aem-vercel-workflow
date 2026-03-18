@@ -1,54 +1,19 @@
-## 🚨 Current Status: NOT TESTABLE/DEMOABLE
+## Current Status
 
-**Test Results:**
-❌ **Maven Build FAILED** - Missing AEM/Sling dependencies
-❌ **Frontend-Backend Integration** - Frontend can't connect to Java services
-❌ **AEM Dependencies** - Require Adobe SDK/uber-jar (not in Maven Central)
+- ✅ **Frontend demo runnable** from `ui.frontend/` with `npm run dev`.
+- ⚠️ **Backend build requires Adobe repo access** and AEM SDK artifacts.
+- ⚠️ **Frontend-backend integration** still needs validation in a real AEM environment.
 
-## 🔧 Low-Hanging Fruit for Demo
+## Suggested Demo Path
 
-### 1. **Quick Fix: Standalone Demo Mode** (30 mins)
-```java
-// Create simple POJO models without AEM dependencies
-// Remove Sling/OSGi annotations temporarily
-// Add in-memory JSON storage instead of JCR
-```
+### Option A: Frontend-Only Demo (Fast)
+- Use the visual workflow builder with template data.
+- Demonstrate simulation, analytics, and export flows.
 
-### 2. **Frontend Mock Integration** (15 mins)
-```typescript
-// Add mock API responses in React UI
-// Create demo workflows with sample data
-// Remove actual HTTP calls temporarily
-```
+### Option B: Full AEM Demo (Slower)
+- Build and deploy the `core` bundle and `ui.*` packages to AEM.
+- Validate REST endpoints and end-to-end workflow execution.
 
-### 3. **Minimal Viable Demo** (45 mins total)
-- ✅ Remove AEM dependencies → Pure Java POJOs
-- ✅ Create in-memory storage → No JCR needed  
-- ✅ Mock API responses → No backend required
-- ✅ Add sample workflows → Instant demo content
-
-## 🎯 Recommendation: Go with Mock Demo
-
-**Benefits:**
-- **Immediate demo** - Works in 30 minutes
-- **Visual impact** - Workflow builder fully functional
-- **No complexity** - Skip AEM setup for now
-- **Easy recovery** - Can add real backend later
-
-**What you'll get:**
-- Working React workflow builder
-- 3-5 demo workflow templates
-- Drag-and-drop functionality  
-- Save/load (mock)
-- Professional presentation
-
-**What you'll sacrifice:**
-- Real persistence (uses localStorage)
-- Actual execution (simulated)
-- AEM integration
-
----
-
-**Should I implement the quick mock demo?** 🤔
-
-This will give you something impressive to show immediately while we work on the real AEM integration.
+## Next Steps
+1. Decide whether the demo is frontend-only or full-stack.
+2. If full-stack, ensure AEM SDK is available and resolve Maven repo access.

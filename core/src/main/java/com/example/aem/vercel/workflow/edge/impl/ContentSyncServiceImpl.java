@@ -1,6 +1,8 @@
 package com.example.aem.vercel.workflow.edge.impl;
 
 import com.example.aem.vercel.workflow.edge.ContentSyncService;
+import com.example.aem.vercel.workflow.edge.SyncHistory;
+import com.example.aem.vercel.workflow.edge.SyncStatus;
 import org.osgi.service.component.annotations.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

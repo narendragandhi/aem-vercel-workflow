@@ -1,20 +1,20 @@
-# AEM Vercel Workflow Project Documentation
+# AEMFlow Project Documentation
 
-**Project:** AEM Vercel Workflow Builder  
+**Project:** AEMFlow (Visual Workflow Builder for AEM)  
 **Version:** 1.0.0-SNAPSHOT  
 **Created:** January 15, 2026  
 **Status:** In Development  
 
 ## Project Overview
 
-This is a visual workflow builder for Adobe Experience Manager (AEM) using Vercel Workflow and React Flow. The project enables users to create, manage, and execute complex content workflows through a drag-and-drop interface.
+This is a visual workflow builder for Adobe Experience Manager (AEM) using React Flow. The project enables users to create, manage, and execute complex content workflows through a drag-and-drop interface.
 
 ## Architecture
 
 ### Maven Multi-Module Structure
 
 ```
-aem-vercel-workflow/
+aemflow/
 ├── pom.xml                 # Parent POM with dependency management
 ├── core/                   # Backend Java components (OSGi bundle)
 ├── ui.apps/               # AEM application package
@@ -156,8 +156,8 @@ aem-vercel-workflow/
 <sling.user>admin</sling.user>
 <sling.password>admin</sling.password>
 <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-<maven.compiler.source>11</maven.compiler.source>
-<maven.compiler.target>11</maven.compiler.target>
+<maven.compiler.source>21</maven.compiler.source>
+<maven.compiler.target>21</maven.compiler.target>
 ```
 
 ### Build Configuration
@@ -293,14 +293,6 @@ core/src/main/java/com/example/aem/vercel/workflow/
 └── config/                    # OSGi configuration
     └── WorkflowConfig.java
 ```
-
-## Git Repository Status
-
-**Current Branch**: main  
-**Last Commit**: Initial project structure setup  
-**Working Directory**: Clean (no uncommitted changes)
-
----
 
 **Documentation Last Updated**: January 15, 2026  
 **Next Review**: After backend implementation completion

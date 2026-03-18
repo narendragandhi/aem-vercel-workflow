@@ -40,6 +40,7 @@ tests/e2e/playwright-report/
 # Build artifacts (all modules)
 target/
 node/
+.m2/
 
 # OS
 **/.DS_Store

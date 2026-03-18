@@ -345,6 +345,14 @@ const mermaid = generateMermaidDiagram(nodes, edges);
 
 ---
 
+## Security & RBAC
+
+- **Groups**: `aemflow-admin` (read/write), `aemflow-author` (read-only)
+- **Audit Logs**: stored in JCR under `/var/audit/aemflow`
+- **Service Users**: backend operations run via service user mapping (see OSGi service user mapping config)
+
+---
+
 ## Tech Stack
 
 - **React 18** - UI framework

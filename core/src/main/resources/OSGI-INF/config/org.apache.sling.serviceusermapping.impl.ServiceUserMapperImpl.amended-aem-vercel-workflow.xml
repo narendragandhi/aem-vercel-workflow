@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jcr:root xmlns:jcr="http://www.jcp.org/jcr/1.0" xmlns:sling="http://sling.apache.org/jcr/sling/1.0"
     jcr:primaryType="sling:OsgiConfig"
-    user.mapping="[com.example.aem.vercel.workflow.core:ai-actions-service=aem-vercel-workflow-service,com.example.aem.vercel.workflow.core:workflow-definition-service=aem-vercel-workflow-service]"/>
+    user.mapping="[com.example.aem.vercel.workflow.core:ai-actions-service=aem-vercel-workflow-service,com.example.aem.vercel.workflow.core:workflow-definition-service=aem-vercel-workflow-service,com.example.aem.vercel.workflow.core:audit-log-service=aem-vercel-workflow-service]"/>

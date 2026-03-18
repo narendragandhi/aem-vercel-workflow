@@ -1,6 +1,8 @@
 package com.example.aem.vercel.workflow.servlet;
 
 import com.example.aem.vercel.workflow.model.WorkflowDefinitionModel;
+import com.example.aem.vercel.workflow.service.AuditLogService;
+import com.example.aem.vercel.workflow.service.AuthorizationService;
 import com.example.aem.vercel.workflow.service.WorkflowDefinitionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -25,6 +27,12 @@ public class WorkflowApiServlet extends SlingAllMethodsServlet {
     @Reference
     private WorkflowDefinitionService workflowDefinitionService;
 
+    @Reference
+    private AuthorizationService authorizationService;
+
+    @Reference
+    private AuditLogService auditLogService;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
@@ -33,6 +41,12 @@ public class WorkflowApiServlet extends SlingAllMethodsServlet {
         response.setCharacterEncoding("UTF-8");
 
         try {
+            if (!authorizationService.canRead(request.getResourceResolver())) {
+                response.setStatus(SlingHttpServletResponse.SC_FORBIDDEN);
+                response.getWriter().write("{\"error\":\"Forbidden\"}");
+                return;
+            }
+
             String id = request.getParameter("id");
             if (id != null && !id.isEmpty()) {
                 workflowDefinitionService.getWorkflow(id)
@@ -63,10 +77,24 @@ public class WorkflowApiServlet extends SlingAllMethodsServlet {
         response.setCharacterEncoding("UTF-8");
 
         try {
+            if (!authorizationService.canWrite(request.getResourceResolver())) {
+                response.setStatus(SlingHttpServletResponse.SC_FORBIDDEN);
+                response.getWriter().write("{\"error\":\"Forbidden\"}");
+                return;
+            }
+
             WorkflowDefinitionModel workflow = objectMapper.readValue(request.getReader(), WorkflowDefinitionModel.class);
             WorkflowDefinitionModel createdWorkflow = workflowDefinitionService.createWorkflow(workflow);
             response.getWriter().write(objectMapper.writeValueAsString(createdWorkflow));
             response.setStatus(SlingHttpServletResponse.SC_CREATED);
+
+            auditLogService.logEvent(
+                request.getResourceResolver().getUserID(),
+                "workflow.create",
+                createdWorkflow.getId(),
+                "success",
+                java.util.Map.of("name", createdWorkflow.getName())
+            );
         } catch (Exception e) {
             response.setStatus(SlingHttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write("{\"error\":\"" + e.getMessage() + "\"}");
@@ -79,6 +107,12 @@ public class WorkflowApiServlet extends SlingAllMethodsServlet {
         response.setCharacterEncoding("UTF-8");
 
         try {
+            if (!authorizationService.canWrite(request.getResourceResolver())) {
+                response.setStatus(SlingHttpServletResponse.SC_FORBIDDEN);
+                response.getWriter().write("{\"error\":\"Forbidden\"}");
+                return;
+            }
+
             String id = request.getParameter("id");
             if (id == null || id.isEmpty()) {
                 response.setStatus(SlingHttpServletResponse.SC_BAD_REQUEST);
@@ -89,6 +123,14 @@ public class WorkflowApiServlet extends SlingAllMethodsServlet {
             WorkflowDefinitionModel workflow = objectMapper.readValue(request.getReader(), WorkflowDefinitionModel.class);
             WorkflowDefinitionModel updatedWorkflow = workflowDefinitionService.updateWorkflow(id, workflow);
             response.getWriter().write(objectMapper.writeValueAsString(updatedWorkflow));
+
+            auditLogService.logEvent(
+                request.getResourceResolver().getUserID(),
+                "workflow.update",
+                updatedWorkflow.getId(),
+                "success",
+                java.util.Map.of("name", updatedWorkflow.getName())
+            );
         } catch (Exception e) {
             response.setStatus(SlingHttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write("{\"error\":\"" + e.getMessage() + "\"}");
@@ -101,6 +143,12 @@ public class WorkflowApiServlet extends SlingAllMethodsServlet {
         response.setCharacterEncoding("UTF-8");
 
         try {
+            if (!authorizationService.canWrite(request.getResourceResolver())) {
+                response.setStatus(SlingHttpServletResponse.SC_FORBIDDEN);
+                response.getWriter().write("{\"error\":\"Forbidden\"}");
+                return;
+            }
+
             String id = request.getParameter("id");
             if (id == null || id.isEmpty()) {
                 response.setStatus(SlingHttpServletResponse.SC_BAD_REQUEST);
@@ -110,6 +158,13 @@ public class WorkflowApiServlet extends SlingAllMethodsServlet {
 
             if (workflowDefinitionService.deleteWorkflow(id)) {
                 response.setStatus(SlingHttpServletResponse.SC_NO_CONTENT);
+                auditLogService.logEvent(
+                    request.getResourceResolver().getUserID(),
+                    "workflow.delete",
+                    id,
+                    "success",
+                    java.util.Map.of()
+                );
             } else {
                 response.setStatus(SlingHttpServletResponse.SC_NOT_FOUND);
             }

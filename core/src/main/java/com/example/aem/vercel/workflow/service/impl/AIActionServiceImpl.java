@@ -4,6 +4,9 @@ import com.example.aem.vercel.workflow.model.AIActionModel;
 import com.example.aem.vercel.workflow.model.AIActionExecutionModel;
 import com.example.aem.vercel.workflow.service.AIActionService;
 import com.example.aem.vercel.workflow.service.AIService; // Import AIService
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.adobe.granite.crypto.CryptoSupport;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
@@ -53,11 +56,15 @@ public class AIActionServiceImpl implements AIActionService {
     private static final String ACTIONS_BASE_PATH = "/var/ai-actions";
     private static final String EXECUTIONS_BASE_PATH = "/var/ai-executions";
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
     private final ExecutorService executorService = Executors.newFixedThreadPool(10);
     private final Map<String, CompletableFuture<AIActionExecutionModel>> runningExecutions = new ConcurrentHashMap<>();
 
     @Reference
     private AIService aiService;
+
+    @Reference
+    private CryptoSupport cryptoSupport;
 
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
@@ -620,6 +627,10 @@ public class AIActionServiceImpl implements AIActionService {
         } else {
             node.setProperty("contentTypes", new String[0]); // Ensure property exists as empty array if null
         }
+
+        persistJsonProperty(node, "configuration", action.getConfiguration(), true);
+        persistJsonProperty(node, "promptTemplate", action.getPromptTemplate(), false);
+        persistJsonProperty(node, "outputSchema", action.getOutputSchema(), false);
     }
 
     private AIActionModel createActionFromNode(Node node) throws RepositoryException {
@@ -657,8 +668,51 @@ public class AIActionServiceImpl implements AIActionService {
         } else {
             action.setContentTypes(new String[0]);
         }
+
+        action.setConfiguration(readJsonProperty(node, "configuration", true));
+        action.setPromptTemplate(readJsonProperty(node, "promptTemplate", false));
+        action.setOutputSchema(readJsonProperty(node, "outputSchema", false));
         
         return action;
+    }
+
+    private void persistJsonProperty(Node node, String baseName, Map<String, Object> value, boolean encryptIfSensitive) throws RepositoryException {
+        if (value == null) {
+            return;
+        }
+        try {
+            String json = objectMapper.writeValueAsString(value);
+            boolean encrypted = encryptIfSensitive && containsSensitiveKeys(value);
+            String stored = encrypted ? cryptoSupport.protect(json) : json;
+            node.setProperty(baseName, stored);
+            node.setProperty(baseName + "Encrypted", encrypted);
+        } catch (Exception e) {
+            throw new RepositoryException("Failed to serialize " + baseName, e);
+        }
+    }
+
+    private Map<String, Object> readJsonProperty(Node node, String baseName, boolean decryptIfEncrypted) throws RepositoryException {
+        if (!node.hasProperty(baseName)) {
+            return null;
+        }
+        try {
+            String raw = node.getProperty(baseName).getString();
+            boolean encrypted = node.hasProperty(baseName + "Encrypted") && node.getProperty(baseName + "Encrypted").getBoolean();
+            String json = (decryptIfEncrypted && encrypted) ? cryptoSupport.unprotect(raw) : raw;
+            return objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {});
+        } catch (Exception e) {
+            throw new RepositoryException("Failed to parse " + baseName, e);
+        }
+    }
+
+    private boolean containsSensitiveKeys(Map<String, Object> map) {
+        for (String key : map.keySet()) {
+            String normalized = key.toLowerCase();
+            if (normalized.contains("secret") || normalized.contains("apikey") || normalized.contains("token")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private AIActionExecutionModel createExecution(String executionId, AIActionModel action, 

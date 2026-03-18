@@ -1,6 +1,8 @@
 package com.example.aem.vercel.workflow.servlet;
 
 import com.example.aem.vercel.workflow.model.AIActionModel;
+import com.example.aem.vercel.workflow.service.AuditLogService;
+import com.example.aem.vercel.workflow.service.AuthorizationService;
 import com.example.aem.vercel.workflow.service.AIActionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -39,9 +41,20 @@ public class AIActionApiServlet extends SlingAllMethodsServlet {
     @Reference
     private AIActionService aiActionService;
 
+    @Reference
+    private AuthorizationService authorizationService;
+
+    @Reference
+    private AuditLogService auditLogService;
+
     @Override
     protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException {
         try {
+            if (!authorizationService.canRead(request.getResourceResolver())) {
+                sendErrorResponse(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden");
+                return;
+            }
+
             String path = request.getPathInfo();
             String[] selectors = request.getRequestPathInfo().getSelectors();
             String[] segments = getPathSegments(path);
@@ -64,6 +77,11 @@ public class AIActionApiServlet extends SlingAllMethodsServlet {
     @Override
     protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException {
         try {
+            if (!authorizationService.canWrite(request.getResourceResolver())) {
+                sendErrorResponse(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden");
+                return;
+            }
+
             String path = request.getPathInfo();
             String[] segments = getPathSegments(path);
             if (segments.length > 0) {
@@ -101,6 +119,11 @@ public class AIActionApiServlet extends SlingAllMethodsServlet {
     @Override
     protected void doPut(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException {
         try {
+            if (!authorizationService.canWrite(request.getResourceResolver())) {
+                sendErrorResponse(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden");
+                return;
+            }
+
             String path = request.getPathInfo();
             String[] segments = getPathSegments(path);
             if (segments.length == 0) {
@@ -122,6 +145,11 @@ public class AIActionApiServlet extends SlingAllMethodsServlet {
     @Override
     protected void doDelete(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException {
         try {
+            if (!authorizationService.canWrite(request.getResourceResolver())) {
+                sendErrorResponse(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden");
+                return;
+            }
+
             String path = request.getPathInfo();
             String[] segments = getPathSegments(path);
             if (segments.length == 0) {
@@ -131,7 +159,7 @@ public class AIActionApiServlet extends SlingAllMethodsServlet {
             }
 
             String actionId = segments[0];
-            handleDeleteAction(actionId, response);
+            handleDeleteAction(actionId, request, response);
 
         } catch (Exception e) {
             LOG.error("Error in DELETE request", e);
@@ -193,6 +221,14 @@ public class AIActionApiServlet extends SlingAllMethodsServlet {
         );
 
         sendJsonResponse(response, HttpServletResponse.SC_CREATED, result);
+
+        auditLogService.logEvent(
+            request.getResourceResolver().getUserID(),
+            "ai-action.create",
+            createdAction.getId(),
+            "success",
+            Map.of("name", createdAction.getName())
+        );
     }
 
     private void handleUpdateAction(String actionId, SlingHttpServletRequest request, SlingHttpServletResponse response) throws Exception {
@@ -208,9 +244,17 @@ public class AIActionApiServlet extends SlingAllMethodsServlet {
         );
 
         sendJsonResponse(response, HttpServletResponse.SC_OK, result);
+
+        auditLogService.logEvent(
+            request.getResourceResolver().getUserID(),
+            "ai-action.update",
+            updatedAction.getId(),
+            "success",
+            Map.of("name", updatedAction.getName())
+        );
     }
 
-    private void handleDeleteAction(String actionId, SlingHttpServletResponse response) throws Exception {
+    private void handleDeleteAction(String actionId, SlingHttpServletRequest request, SlingHttpServletResponse response) throws Exception {
         aiActionService.deleteAction(actionId);
         
         Map<String, Object> result = Map.of(
@@ -219,6 +263,14 @@ public class AIActionApiServlet extends SlingAllMethodsServlet {
         );
 
         sendJsonResponse(response, HttpServletResponse.SC_OK, result);
+
+        auditLogService.logEvent(
+            request.getResourceResolver().getUserID(),
+            "ai-action.delete",
+            actionId,
+            "success",
+            Map.of()
+        );
     }
 
     private void handleExecuteAction(String actionId, SlingHttpServletRequest request, SlingHttpServletResponse response) throws Exception {
@@ -243,6 +295,14 @@ public class AIActionApiServlet extends SlingAllMethodsServlet {
         );
 
         sendJsonResponse(response, HttpServletResponse.SC_ACCEPTED, result);
+
+        auditLogService.logEvent(
+            request.getResourceResolver().getUserID(),
+            "ai-action.execute",
+            actionId,
+            "success",
+            Map.of("executionId", execution.getId())
+        );
     }
 
     private void handleTestAction(String actionId, SlingHttpServletRequest request, SlingHttpServletResponse response) throws Exception {
@@ -259,6 +319,14 @@ public class AIActionApiServlet extends SlingAllMethodsServlet {
         );
 
         sendJsonResponse(response, HttpServletResponse.SC_OK, result);
+
+        auditLogService.logEvent(
+            request.getResourceResolver().getUserID(),
+            "ai-action.test",
+            actionId,
+            "success",
+            Map.of("executionId", execution.getId())
+        );
     }
 
     private void handleCloneAction(String actionId, SlingHttpServletRequest request, SlingHttpServletResponse response) throws Exception {
@@ -281,6 +349,14 @@ public class AIActionApiServlet extends SlingAllMethodsServlet {
         );
 
         sendJsonResponse(response, HttpServletResponse.SC_CREATED, result);
+
+        auditLogService.logEvent(
+            request.getResourceResolver().getUserID(),
+            "ai-action.clone",
+            actionId,
+            "success",
+            Map.of("newId", clonedAction.getId())
+        );
     }
 
     private void handleSearch(SlingHttpServletRequest request, SlingHttpServletResponse response) throws Exception {

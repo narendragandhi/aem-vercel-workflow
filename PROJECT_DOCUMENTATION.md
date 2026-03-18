@@ -195,6 +195,12 @@ The project is configured to use `maven-compiler-plugin` version `3.13.0` and `l
 }
 ```
 
+## Security & Compliance
+
+- **RBAC**: AEM group-based authorization using `aemflow-admin` (read/write) and `aemflow-author` (read).
+- **Audit Logging**: Audit events persisted to `/var/audit/aemflow` via a service user.
+- **Encryption**: Sensitive AI action configuration fields are encrypted using AEM CryptoSupport.
+
 ## Development Commands
 
 ### Frontend Development

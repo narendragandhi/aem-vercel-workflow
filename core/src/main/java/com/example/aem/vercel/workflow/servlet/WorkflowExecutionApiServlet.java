@@ -1,6 +1,8 @@
 package com.example.aem.vercel.workflow.servlet;
 
 import com.example.aem.vercel.workflow.model.WorkflowExecutionModel;
+import com.example.aem.vercel.workflow.service.AuditLogService;
+import com.example.aem.vercel.workflow.service.AuthorizationService;
 import com.example.aem.vercel.workflow.service.WorkflowExecutionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -41,6 +43,12 @@ public class WorkflowExecutionApiServlet extends SlingAllMethodsServlet {
     @Reference
     private WorkflowExecutionService workflowExecutionService;
 
+    @Reference
+    private AuthorizationService authorizationService;
+
+    @Reference
+    private AuditLogService auditLogService;
+
     public WorkflowExecutionApiServlet() {
         this.objectMapper = new ObjectMapper();
         this.objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
@@ -49,6 +57,11 @@ public class WorkflowExecutionApiServlet extends SlingAllMethodsServlet {
     @Override
     protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException {
         try {
+            if (!authorizationService.canRead(request.getResourceResolver())) {
+                writeErrorResponse(response, "Forbidden", HttpServletResponse.SC_FORBIDDEN);
+                return;
+            }
+
             String pathInfo = request.getPathInfo();
             String executionId = extractExecutionId(pathInfo);
 
@@ -91,6 +104,11 @@ public class WorkflowExecutionApiServlet extends SlingAllMethodsServlet {
     @Override
     protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException {
         try {
+            if (!authorizationService.canExecute(request.getResourceResolver())) {
+                writeErrorResponse(response, "Forbidden", HttpServletResponse.SC_FORBIDDEN);
+                return;
+            }
+
             @SuppressWarnings("unchecked")
             Map<String, Object> requestData = objectMapper.readValue(request.getReader(), Map.class);
             
@@ -106,6 +124,14 @@ public class WorkflowExecutionApiServlet extends SlingAllMethodsServlet {
             
             WorkflowExecutionModel execution = workflowExecutionService.startExecution(workflowId, userId, variables);
             writeJsonResponse(response, execution, HttpServletResponse.SC_CREATED);
+
+            auditLogService.logEvent(
+                request.getResourceResolver().getUserID(),
+                "workflow.execute",
+                workflowId,
+                "success",
+                Map.of("executionId", execution.getId())
+            );
             
         } catch (IllegalArgumentException e) {
             LOG.warn("Invalid execution request", e);
@@ -119,6 +145,11 @@ public class WorkflowExecutionApiServlet extends SlingAllMethodsServlet {
     @Override
     protected void doPut(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException {
         try {
+            if (!authorizationService.canWrite(request.getResourceResolver())) {
+                writeErrorResponse(response, "Forbidden", HttpServletResponse.SC_FORBIDDEN);
+                return;
+            }
+
             String pathInfo = request.getPathInfo();
             String executionId = extractExecutionId(pathInfo);
             
@@ -156,6 +187,13 @@ public class WorkflowExecutionApiServlet extends SlingAllMethodsServlet {
             
             if (success) {
                 writeJsonResponse(response, Map.of("success", true, "action", action), HttpServletResponse.SC_OK);
+                auditLogService.logEvent(
+                    request.getResourceResolver().getUserID(),
+                    "workflow.execution." + action,
+                    executionId,
+                    "success",
+                    Map.of()
+                );
             } else {
                 writeErrorResponse(response, "Action failed: " + action, HttpServletResponse.SC_BAD_REQUEST);
             }
@@ -169,6 +207,11 @@ public class WorkflowExecutionApiServlet extends SlingAllMethodsServlet {
     @Override
     protected void doDelete(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException {
         try {
+            if (!authorizationService.canWrite(request.getResourceResolver())) {
+                writeErrorResponse(response, "Forbidden", HttpServletResponse.SC_FORBIDDEN);
+                return;
+            }
+
             String pathInfo = request.getPathInfo();
             String executionId = extractExecutionId(pathInfo);
             
@@ -186,6 +229,13 @@ public class WorkflowExecutionApiServlet extends SlingAllMethodsServlet {
             boolean cancelled = workflowExecutionService.cancelExecution(executionId, reason);
             if (cancelled) {
                 writeJsonResponse(response, Map.of("message", "Execution cancelled successfully"), HttpServletResponse.SC_OK);
+                auditLogService.logEvent(
+                    request.getResourceResolver().getUserID(),
+                    "workflow.execution.cancel",
+                    executionId,
+                    "success",
+                    Map.of("reason", reason)
+                );
             } else {
                 writeErrorResponse(response, "Execution not found or not running: " + executionId, HttpServletResponse.SC_NOT_FOUND);
             }

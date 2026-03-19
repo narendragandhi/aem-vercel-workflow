@@ -1,0 +1,31 @@
+{
+  "scripts": [
+    "create service user aem-vercel-workflow-service",
+    "create group aemflow-admin",
+    "create group aemflow-author",
+    "create path (sling:Folder) /var/workflows",
+    "create path (sling:Folder) /var/workflows/definitions",
+    "create path (sling:Folder) /var/audit",
+    "create path (sling:Folder) /var/audit/aemflow",
+    "create path (sling:Folder) /var/ai-actions",
+    "create path (sling:Folder) /var/ai-executions",
+    "set ACL for aem-vercel-workflow-service",
+    "  allow jcr:read,jcr:write,rep:read,rep:write,rep:modifyProperties on /var/workflows",
+    "  allow jcr:read,jcr:write,rep:read,rep:write,rep:modifyProperties on /var/audit/aemflow",
+    "  allow jcr:read,jcr:write,rep:read,rep:write,rep:modifyProperties on /var/ai-actions",
+    "  allow jcr:read,jcr:write,rep:read,rep:write,rep:modifyProperties on /var/ai-executions",
+    "end",
+    "set ACL for aemflow-admin",
+    "  allow jcr:read,jcr:write,rep:read,rep:write,rep:modifyProperties on /var/workflows",
+    "  allow jcr:read,jcr:write,rep:read,rep:write,rep:modifyProperties on /var/audit/aemflow",
+    "  allow jcr:read,jcr:write,rep:read,rep:write,rep:modifyProperties on /var/ai-actions",
+    "  allow jcr:read,jcr:write,rep:read,rep:write,rep:modifyProperties on /var/ai-executions",
+    "end",
+    "set ACL for aemflow-author",
+    "  allow jcr:read,rep:read on /var/workflows",
+    "  allow jcr:read,rep:read on /var/audit/aemflow",
+    "  allow jcr:read,rep:read on /var/ai-actions",
+    "  allow jcr:read,rep:read on /var/ai-executions",
+    "end"
+  ]
+}

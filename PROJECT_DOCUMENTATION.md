@@ -18,6 +18,7 @@ aemflow/
 ├── pom.xml                 # Parent POM with dependency management
 ├── core/                   # Backend Java components (OSGi bundle)
 ├── ui.apps/               # AEM application package
+├── ui.config/             # OSGi config package (repo init, ACLs)
 ├── ui.content/            # AEM content package
 ├── ui.frontend/           # React/TypeScript frontend application
 ├── dispatcher/            # Apache dispatcher configuration
@@ -110,12 +111,12 @@ aemflow/
 - `AEMWorkflowIntegrationService`: Bridge to native AEM workflows
 
 **Service Implementations** (`core/src/main/java/com/example/aem/vercel/workflow/service/impl/`)
-- `WorkflowDefinitionServiceImpl`: JCR-based storage with caching
+- `WorkflowDefinitionServiceImpl`: Repository-backed storage with caching
 - `WorkflowExecutionServiceImpl`: Multi-threaded execution engine
 - **Features**: Concurrent execution, pause/resume, cancellation, variable management
 
 **REST API Endpoints** (`core/src/main/java/com/example/aem/vercel/workflow/servlet/`)
-- `WorkflowApiServlet`: `/api/workflows` - Full CRUD operations
+- `WorkflowApiServlet`: `/bin/workflows` - Full CRUD operations
 - `WorkflowExecutionApiServlet`: `/api/workflows/executions` - Execution management
 - **Features**: CORS support, error handling, JSON responses
 
@@ -146,6 +147,10 @@ aemflow/
 4. **Execution Tracking**: Runtime state and logging infrastructure
 
 ## Configuration Details
+
+### Cloud Manager And AEM SDK
+- Deployment and validation runbook in `CLOUD_MANAGER_RUNBOOK.md`.
+- Repo init config lives in `ui.config` and provisions service user, groups, ACLs, and `/var` storage paths.
 
 ### Maven Properties
 ```xml

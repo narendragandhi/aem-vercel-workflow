@@ -58,6 +58,14 @@ Open http://localhost:5173 and start building!
 
 ---
 
+## Enterprise Readiness
+
+- Cloud Manager deployment and validation steps in `CLOUD_MANAGER_RUNBOOK.md`.
+- RBAC groups `aemflow-admin` and `aemflow-author` created by repo init in `ui.config`.
+- Audit logging and encryption support for workflow and AI action operations.
+
+---
+
 ## Features
 
 ### Visual Editor

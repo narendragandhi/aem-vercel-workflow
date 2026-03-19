@@ -5,12 +5,9 @@ import com.example.aem.vercel.workflow.model.WorkflowStepModel;
 import com.example.aem.vercel.workflow.model.WorkflowEdgeModel;
 import com.example.aem.vercel.workflow.model.WorkflowExecutionModel;
 import com.example.aem.vercel.workflow.model.WorkflowPortModel;
+import com.example.aem.vercel.workflow.repository.WorkflowDefinitionRepository;
 import com.example.aem.vercel.workflow.service.WorkflowDefinitionService;
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
 import com.example.aem.vercel.workflow.config.WorkflowConfig;
-import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.api.resource.ValueMap;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -18,20 +15,14 @@ import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.Node;
-import javax.jcr.NodeIterator;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * OSGi service implementation for managing workflow definitions.
  *
- * <p>This service provides CRUD operations for workflow definitions stored
- * in the AEM JCR repository. Workflows are persisted under
- * {@code /var/workflows/definitions} with caching support for improved
- * read performance.</p>
+ * <p>This service provides CRUD operations for workflow definitions via a
+ * pluggable repository, with caching support for improved read performance.</p>
  *
  * <h2>Features</h2>
  * <ul>
@@ -50,8 +41,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * </ul>
  *
  * <h2>Security</h2>
- * <p>All workflow IDs are sanitized to prevent JCR path traversal attacks.
- * The service uses a dedicated service user for repository access.</p>
+ * <p>All workflow IDs are sanitized to prevent path traversal attacks.</p>
  *
  * @author AEMFlow Team
  * @version 2.0.0
@@ -69,52 +59,19 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
     /** Logger for this service. */
     private static final Logger LOG = LoggerFactory.getLogger(WorkflowDefinitionServiceImpl.class);
 
-    /** JCR path where workflow definitions are stored. */
-    private static final String WORKFLOWS_PATH = "/var/workflows/definitions";
-
-    /** Default node type for workflow storage nodes. */
-    private static final String NODE_TYPE = "nt:unstructured";
-
-    /** Custom node type for workflow definition nodes. */
-    private static final String WORKFLOW_NODE_TYPE = "vercel:workflow";
-
     /** Thread-safe cache for workflow definitions. */
     private final Map<String, WorkflowDefinitionModel> cache = new ConcurrentHashMap<>();
 
-    /** Factory for obtaining resource resolvers. */
     @Reference
-    private ResourceResolverFactory resourceResolverFactory;
+    private WorkflowDefinitionRepository workflowRepository;
 
     /** OSGi configuration for this service. */
     private WorkflowConfig config;
 
-    /** Resource resolver for JCR access. */
-    private ResourceResolver resourceResolver;
-
-    /** JCR session for node operations. */
-    private Session session;
-
     @Activate
     protected void activate(WorkflowConfig config) {
         this.config = config;
-        try {
-            Map<String, Object> param = new HashMap<>();
-            param.put(ResourceResolverFactory.SUBSERVICE, "workflow-definition-service");
-            this.resourceResolver = resourceResolverFactory.getServiceResourceResolver(param);
-            this.session = resourceResolver.adaptTo(Session.class);
-            initializeWorkflowsPath(this.session);
-        } catch (org.apache.sling.api.resource.LoginException e) {
-            LOG.error("Failed to get service resource resolver", e);
-        }
         LOG.info("WorkflowDefinitionService activated with cache enabled: {}", config.enableCache());
-    }
-
-    private void initializeWorkflowsPath(Session session) {
-        try {
-            ensurePathExists(WORKFLOWS_PATH, NODE_TYPE);
-        } catch (Exception e) {
-            LOG.error("Failed to initialize workflows path", e);
-        }
     }
 
     @Override
@@ -137,24 +94,14 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
         workflow.setCreatedAt(System.currentTimeMillis());
         workflow.setUpdatedAt(System.currentTimeMillis());
 
-        try {
-            Node workflowsNode = ensurePathExists(WORKFLOWS_PATH, NODE_TYPE);
-            
-            Node workflowNode = workflowsNode.addNode(workflow.getId(), WORKFLOW_NODE_TYPE);
-            saveWorkflowToNode(workflowNode, workflow);
-            session.save();
+        WorkflowDefinitionModel created = workflowRepository.create(workflow);
 
-            if (config.enableCache()) {
-                cache.put(workflow.getId(), workflow);
-            }
-
-            LOG.info("Created workflow: {}", workflow.getId());
-            return workflow;
-            
-        } catch (RepositoryException e) {
-            LOG.error("Failed to create workflow", e);
-            throw new RuntimeException("Failed to create workflow", e);
+        if (config.enableCache()) {
+            cache.put(created.getId(), created);
         }
+
+        LOG.info("Created workflow: {}", created.getId());
+        return created;
     }
 
     @Override
@@ -179,22 +126,14 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
             throw new IllegalArgumentException("Invalid workflow: " + String.join(", ", validation.getErrors()));
         }
 
-        try {
-            Node workflowNode = session.getNode(WORKFLOWS_PATH + "/" + sanitizedId);
-            saveWorkflowToNode(workflowNode, workflow);
-            session.save();
+        WorkflowDefinitionModel updated = workflowRepository.update(sanitizedId, workflow);
 
-            if (config.enableCache()) {
-                cache.put(sanitizedId, workflow);
-            }
-
-            LOG.info("Updated workflow: {}", sanitizedId);
-            return workflow;
-            
-        } catch (RepositoryException e) {
-            LOG.error("Failed to update workflow: {}", sanitizedId, e);
-            throw new RuntimeException("Failed to update workflow", e);
+        if (config.enableCache()) {
+            cache.put(sanitizedId, updated);
         }
+
+        LOG.info("Updated workflow: {}", sanitizedId);
+        return updated;
     }
 
     @Override
@@ -212,43 +151,24 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
             }
         }
 
-        try {
-            String path = WORKFLOWS_PATH + "/" + sanitizedId;
-            Resource resource = resourceResolver.getResource(path);
-            
-            if (resource != null) {
-                WorkflowDefinitionModel workflow = loadWorkflowFromResource(resource);
-                if (workflow != null && config.enableCache()) {
-                    cache.put(sanitizedId, workflow);
-                }
-                return Optional.of(workflow);
+        Optional<WorkflowDefinitionModel> workflow = workflowRepository.get(sanitizedId);
+        workflow.ifPresent(item -> {
+            if (config.enableCache()) {
+                cache.put(sanitizedId, item);
             }
-        } catch (Exception e) {
-            LOG.error("Failed to get workflow: {}", sanitizedId, e);
-        }
-
-        return Optional.empty();
+        });
+        return workflow;
     }
 
     @Override
     public List<WorkflowDefinitionModel> getAllWorkflows() {
         List<WorkflowDefinitionModel> workflows = new ArrayList<>();
         
-        try {
-            Resource workflowsResource = resourceResolver.getResource(WORKFLOWS_PATH);
-            if (workflowsResource != null) {
-                for (Resource child : workflowsResource.getChildren()) {
-                    WorkflowDefinitionModel workflow = loadWorkflowFromResource(child);
-                    if (workflow != null) {
-                        workflows.add(workflow);
-                        if (config.enableCache()) {
-                            cache.put(workflow.getId(), workflow);
-                        }
-                    }
-                }
+        for (WorkflowDefinitionModel workflow : workflowRepository.list()) {
+            workflows.add(workflow);
+            if (config.enableCache()) {
+                cache.put(workflow.getId(), workflow);
             }
-        } catch (Exception e) {
-            LOG.error("Failed to get all workflows", e);
         }
 
         return workflows;
@@ -261,25 +181,14 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
             return false;
         }
 
-        try {
-            String path = WORKFLOWS_PATH + "/" + sanitizedId;
-            
-            if (session.nodeExists(path)) {
-                session.getNode(path).remove();
-                session.save();
-                
-                if (config.enableCache()) {
-                    cache.remove(sanitizedId);
-                }
-                
-                LOG.info("Deleted workflow: {}", sanitizedId);
-                return true;
-            }
-        } catch (RepositoryException e) {
-            LOG.error("Failed to delete workflow: {}", sanitizedId, e);
+        boolean deleted = workflowRepository.delete(sanitizedId);
+        if (deleted && config.enableCache()) {
+            cache.remove(sanitizedId);
         }
-
-        return false;
+        if (deleted) {
+            LOG.info("Deleted workflow: {}", sanitizedId);
+        }
+        return deleted;
     }
 
     @Override
@@ -398,122 +307,6 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
         return Collections.emptyList();
     }
 
-    private void saveWorkflowToNode(Node node, WorkflowDefinitionModel workflow) throws RepositoryException {
-        node.setProperty("name", workflow.getName());
-        node.setProperty("description", workflow.getDescription());
-        node.setProperty("createdBy", workflow.getCreatedBy());
-        node.setProperty("createdAt", workflow.getCreatedAt());
-        node.setProperty("updatedAt", workflow.getUpdatedAt());
-
-        // Save steps
-        Node stepsNode;
-        if (node.hasNode("steps")) {
-            stepsNode = node.getNode("steps");
-            clearChildNodes(stepsNode);
-        } else {
-            stepsNode = node.addNode("steps", NODE_TYPE);
-        }
-        for (var step : workflow.getSteps()) {
-            Node stepNode = stepsNode.addNode(step.getId(), NODE_TYPE);
-            stepNode.setProperty("type", step.getType());
-            stepNode.setProperty("title", step.getTitle());
-            stepNode.setProperty("description", step.getDescription());
-            stepNode.setProperty("positionX", step.getPositionX());
-            stepNode.setProperty("positionY", step.getPositionY());
-        }
-
-        // Save edges
-        Node edgesNode;
-        if (node.hasNode("edges")) {
-            edgesNode = node.getNode("edges");
-            clearChildNodes(edgesNode);
-        } else {
-            edgesNode = node.addNode("edges", NODE_TYPE);
-        }
-        for (var edge : workflow.getEdges()) {
-            Node edgeNode = edgesNode.addNode(edge.getId(), NODE_TYPE);
-            edgeNode.setProperty("source", edge.getSource());
-            edgeNode.setProperty("target", edge.getTarget());
-            edgeNode.setProperty("sourceHandle", edge.getSourceHandle());
-            edgeNode.setProperty("targetHandle", edge.getTargetHandle());
-            edgeNode.setProperty("type", edge.getType());
-        }
-
-        // Save variables
-        if (node.hasNode("variables")) {
-            node.getNode("variables").remove();
-        }
-        if (!workflow.getVariables().isEmpty()) {
-            Node variablesNode = node.addNode("variables", NODE_TYPE);
-            for (Map.Entry<String, Object> entry : workflow.getVariables().entrySet()) {
-                variablesNode.setProperty(entry.getKey(), entry.getValue().toString());
-            }
-        }
-    }
-
-    private WorkflowDefinitionModel loadWorkflowFromResource(Resource resource) {
-        try {
-            WorkflowDefinitionModel workflow = new WorkflowDefinitionModel();
-            workflow.setId(resource.getName());
-            
-            ValueMap properties = resource.getValueMap();
-            workflow.setName(properties.get("name", String.class));
-            workflow.setDescription(properties.get("description", String.class));
-            workflow.setCreatedBy(properties.get("createdBy", String.class));
-            workflow.setCreatedAt(properties.get("createdAt", 0L));
-            workflow.setUpdatedAt(properties.get("updatedAt", 0L));
-
-            // Load steps
-            Resource stepsResource = resource.getChild("steps");
-            if (stepsResource != null) {
-                for (Resource stepResource : stepsResource.getChildren()) {
-                    ValueMap stepProps = stepResource.getValueMap();
-                    WorkflowStepModel step = new WorkflowStepModel();
-                    step.setId(stepResource.getName());
-                    step.setType(stepProps.get("type", String.class));
-                    step.setTitle(stepProps.get("title", String.class));
-                    step.setDescription(stepProps.get("description", String.class));
-                    step.setPositionX(stepProps.get("positionX", 0));
-                    step.setPositionY(stepProps.get("positionY", 0));
-                    workflow.addStep(step);
-                }
-            }
-
-            // Load edges
-            Resource edgesResource = resource.getChild("edges");
-            if (edgesResource != null) {
-                for (Resource edgeResource : edgesResource.getChildren()) {
-                    ValueMap edgeProps = edgeResource.getValueMap();
-                    WorkflowEdgeModel edge = new WorkflowEdgeModel();
-                    edge.setId(edgeResource.getName());
-                    edge.setSource(edgeProps.get("source", String.class));
-                    edge.setTarget(edgeProps.get("target", String.class));
-                    edge.setSourceHandle(edgeProps.get("sourceHandle", String.class));
-                    edge.setTargetHandle(edgeProps.get("targetHandle", String.class));
-                    edge.setType(edgeProps.get("type", String.class));
-                    workflow.addEdge(edge);
-                }
-            }
-
-            // Load variables
-            Resource variablesResource = resource.getChild("variables");
-            if (variablesResource != null) {
-                for (Resource varResource : variablesResource.getChildren()) {
-                    ValueMap varProps = varResource.getValueMap();
-                    for (String key : varProps.keySet()) {
-                        workflow.setVariable(key, varProps.get(key));
-                    }
-                }
-            }
-
-            return workflow;
-            
-        } catch (Exception e) {
-            LOG.error("Failed to load workflow from resource: {}", resource.getPath(), e);
-            return null;
-        }
-    }
-
     private WorkflowDefinitionModel cloneWorkflow(WorkflowDefinitionModel original) {
         WorkflowDefinitionModel clone = new WorkflowDefinitionModel();
         clone.setName(original.getName());
@@ -576,31 +369,6 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
         clone.setVariables(new HashMap<>(original.getVariables()));
 
         return clone;
-    }
-
-    private Node ensurePathExists(String path, String nodeType) throws RepositoryException {
-        if (session.nodeExists(path)) {
-            return session.getNode(path);
-        }
-        String normalized = path.startsWith("/") ? path.substring(1) : path;
-        String[] parts = normalized.split("/");
-        Node current = session.getRootNode();
-        for (String part : parts) {
-            if (current.hasNode(part)) {
-                current = current.getNode(part);
-            } else {
-                current = current.addNode(part, nodeType);
-            }
-        }
-        session.save();
-        return current;
-    }
-
-    private void clearChildNodes(Node parent) throws RepositoryException {
-        NodeIterator children = parent.getNodes();
-        while (children.hasNext()) {
-            children.nextNode().remove();
-        }
     }
 
     private String sanitizeId(String id) {

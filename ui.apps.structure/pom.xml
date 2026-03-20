@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.example</groupId>
+        <artifactId>aem-vercel-workflow</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>aem-vercel-workflow.ui.apps.structure</artifactId>
+    <packaging>content-package</packaging>
+    <name>AEM Vercel Workflow - Repository Structure</name>
+    <description>Repository structure package for AEM Vercel Workflow</description>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.jackrabbit</groupId>
+                <artifactId>filevault-package-maven-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <properties>
+                        <cloudManagerTarget>none</cloudManagerTarget>
+                        <noIntermediateSaves>true</noIntermediateSaves>
+                    </properties>
+                    <filters>
+                        <filter><root>/apps</root></filter>
+                        <filter><root>/apps/aem-vercel-workflow</root></filter>
+                        <filter><root>/apps/settings</root></filter>
+                    </filters>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

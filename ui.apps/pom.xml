@@ -28,6 +28,12 @@
                     <packageType>application</packageType>
                     <accessControlHandling>merge</accessControlHandling>
                     <filterSource>src/main/content/META-INF/vault/filter.xml</filterSource>
+                    <repositoryStructurePackages>
+                        <repositoryStructurePackage>
+                            <groupId>${project.groupId}</groupId>
+                            <artifactId>aem-vercel-workflow.ui.apps.structure</artifactId>
+                        </repositoryStructurePackage>
+                    </repositoryStructurePackages>
                     <properties>
                         <cloudManagerTarget>none</cloudManagerTarget>
                     </properties>
@@ -46,6 +52,12 @@
     </build>
 
     <dependencies>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>aem-vercel-workflow.ui.apps.structure</artifactId>
+            <version>${project.version}</version>
+            <type>zip</type>
+        </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>aem-vercel-workflow-core</artifactId>

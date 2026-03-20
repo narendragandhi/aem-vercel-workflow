@@ -27,10 +27,17 @@
                 <configuration>
                     <group>${project.groupId}</group>
                     <name>${project.artifactId}</name>
-                    <packageType>application</packageType>
+                    <packageType>container</packageType>
                     <properties>
                         <cloudManagerTarget>none</cloudManagerTarget>
                     </properties>
+                    <showImportPackageReport>false</showImportPackageReport>
+                    <repositoryStructurePackages>
+                        <repositoryStructurePackage>
+                            <groupId>${project.groupId}</groupId>
+                            <artifactId>aem-vercel-workflow.ui.apps.structure</artifactId>
+                        </repositoryStructurePackage>
+                    </repositoryStructurePackages>
                     <filterSource>src/main/content/META-INF/vault/filter.xml</filterSource>
                 </configuration>
             </plugin>
@@ -45,4 +52,13 @@
             </plugin>
         </plugins>
     </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>aem-vercel-workflow.ui.apps.structure</artifactId>
+            <version>${project.version}</version>
+            <type>zip</type>
+        </dependency>
+    </dependencies>
 </project>

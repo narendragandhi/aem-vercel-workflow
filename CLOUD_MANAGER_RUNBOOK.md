@@ -25,6 +25,10 @@ This runbook describes how to build, deploy, and validate AEMFlow on AEM as a Cl
 - Service user created by repo init.
   - `aem-vercel-workflow-service` is used by backend services.
 
+## Packaging Notes
+- `ui.apps.structure` defines repository roots for `/apps/aem-vercel-workflow`.
+- `ui.config` is a `container` package to allow OSGi configs under `/apps/.../osgiconfig`.
+
 ## Validation Checks
 1. Author API responds.
    - `GET /bin/workflows`
@@ -37,4 +41,3 @@ This runbook describes how to build, deploy, and validate AEMFlow on AEM as a Cl
 
 ## Rollback
 - Use Cloud Manager pipeline rollback to revert to the last successful build.
-

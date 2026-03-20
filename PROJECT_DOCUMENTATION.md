@@ -18,6 +18,7 @@ aemflow/
 ├── pom.xml                 # Parent POM with dependency management
 ├── core/                   # Backend Java components (OSGi bundle)
 ├── ui.apps/               # AEM application package
+├── ui.apps.structure/     # Repository structure roots for /apps
 ├── ui.config/             # OSGi config package (repo init, ACLs)
 ├── ui.content/            # AEM content package
 ├── ui.frontend/           # React/TypeScript frontend application
@@ -151,6 +152,7 @@ aemflow/
 ### Cloud Manager And AEM SDK
 - Deployment and validation runbook in `CLOUD_MANAGER_RUNBOOK.md`.
 - Repo init config lives in `ui.config` and provisions service user, groups, ACLs, and `/var` storage paths.
+- `ui.apps.structure` anchors `/apps/aem-vercel-workflow` for package validation.
 
 ### Maven Properties
 ```xml
